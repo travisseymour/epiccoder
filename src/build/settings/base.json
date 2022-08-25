@@ -1,0 +1,7 @@
+{
+    "app_name": "EPICcoder",
+    "author": "Travis L. Seymour, PhD",
+    "main_module": "src/main/python/main.py",
+    "version": "1.0.0",
+    "hidden_imports": ["PyQt5.QtPrintSupport"]
+}
