@@ -11,7 +11,7 @@ EPICcoder is a _**<font color="orange">minimal</font>**_ programmer's text edito
 * C++ Header Files (*.h)
 
 **NOTE**: This code is based heavily on the sample code1 and video tutorial2 by, FUSEN3 which itself borrows heavily from the tutorials at <https://qscintilla.com/>.
-The EPICcoder binaries can be found here at <https://cogmodlab.ucsc.edu/2022/10/23/epiccoder/>.
+The EPICcoder binaries can be found here at <https://cogmodlab.sites.ucsc.edu/2022/08/25/epiccoder/>.
 1. <https://github.com/Fus3n/pyqt-code-editor-yt>
 2. <https://www.youtube.com/watch?v=ihyDi1aPNBw>
 3. <https://github.com/Fus3n>
