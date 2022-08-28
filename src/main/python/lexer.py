@@ -61,16 +61,16 @@ class PyCustomLexer(QsciLexerCustom):
 
         # styles
         self.setColor(QColor(self.color1), self.DEFAULT)
-        self.setColor(QColor("#c678dd"), self.KEYWORD)
-        self.setColor(QColor("#56b6c2"), self.TYPES)
-        self.setColor(QColor("#98c379"), self.STRING)
-        self.setColor(QColor("#c678dd"), self.KEYARGS)
-        self.setColor(QColor("#c678dd"), self.BRACKETS)
-        self.setColor(QColor("#777777"), self.COMMENTS)
-        self.setColor(QColor("#d19a5e"), self.CONSTANTS)
-        self.setColor(QColor("#61afd1"), self.FUNCTIONS)
-        self.setColor(QColor("#C68F55"), self.CLASSES)
-        self.setColor(QColor("#61afd1"), self.FUNCTION_DEF)
+        self.setColor(QColor("#c678dd"), self.KEYWORD)  # (198 , 120 , 221)
+        self.setColor(QColor("#56b6c2"), self.TYPES)  # (86 , 182 , 194)
+        self.setColor(QColor("#98c379"), self.STRING)  # (152 , 195 , 121)
+        self.setColor(QColor("#c678dd"), self.KEYARGS)  # (198 , 120 , 221)
+        self.setColor(QColor("#c678dd"), self.BRACKETS)  # (198 , 120 , 221)
+        self.setColor(QColor("#777777"), self.COMMENTS)  # (119 , 119 , 119)
+        self.setColor(QColor("#d19a5e"), self.CONSTANTS)  # (209 , 154 , 94)
+        self.setColor(QColor("#61afd1"), self.FUNCTIONS)  # (97 , 175 , 209)
+        self.setColor(QColor("#C68F55"), self.CLASSES)  # (198 , 143 , 85)
+        self.setColor(QColor("#61afd1"), self.FUNCTION_DEF)  # (97 , 175 , 209)
 
         # paper color
         self.setPaper(QColor(self.color2), self.DEFAULT)
@@ -349,16 +349,16 @@ class PPSCustomLexer(QsciLexerCustom):
         self.PARENS = 10
 
         # colors
-        bright_green = QColor("#a6e22b")
-        red = QColor("#f9245e")
-        teal = QColor("#c678dd")
-        brown = QColor("#736643")
-        light_brown = QColor("#b39e69")
-        purple = QColor("#ac7db8")
-        yellow = QColor("#e7db74")
-        orange = QColor("#fc9221")
-        hot_pink = QColor("#ff00cc")
-        light_blue = QColor("#6495ed")
+        bright_green = QColor("#a6e22b")  # (166 , 226 , 43)
+        red = QColor("#f9245e")  # (249 , 36 , 94)
+        teal = QColor("#c678dd")  # (198 , 120 , 221)
+        brown = QColor("#736643")  # (115 , 102 , 67)
+        light_brown = QColor("#b39e69")  # (179 , 158 , 105)
+        purple = QColor("#ac7db8")  # (172 , 125 , 184)
+        yellow = QColor("#e7db74")  # (231 , 219 , 116)
+        orange = QColor("#fc9221")  # (252 , 146 , 33)
+        hot_pink = QColor("#ff00cc")  # (255 , 0 , 204)
+        light_blue = QColor("#6495ed")  # (100 , 149 , 237)
 
         # styles
         self.setColor(QColor(self.default_text_color), self.DEFAULT)

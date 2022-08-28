@@ -24,37 +24,5 @@ Note: This project's code is released under the **GPLv3** license to comply with
 ## Binary File Creation
 
 Binaries are available for Linux, MacOS, and Windows at <https://cogmodlab.sites.ucsc.edu/2022/08/25/epiccoder/>.
-To create these binaries, the entire project is managed by the pro version of the F-Man Build System (fbs) (<https://build-system.fman.io/>). You can recreate these binaries using the build commands provided below.
+To create these binaries, the entire project is managed by the pro version of the F-Man Build System (fbs) (<https://build-system.fman.io/>). Also see <https://www.pythonguis.com/tutorials/packaging-pyqt5-apps-fbs/>.
 
-HOWEVER,
-Note that with the free/opensource version of fbs (<https://github.com/mherrmann/fbs>) (installable with `pip install fbs`), you will be limited to Python 3.6. In order to use fbs with later versions of Python, you will need to purchase the pro version (<https://build-system.fman.io/>) (which I highly recommend if you are producing multi-platform binaries of Python projects).
-
-### Run
-`fbs run`
-
-### Build
-
-`fbs clean && fbs freeze`
-
-### Run Frozen
-
-#### Linux
-`./target/app_name/app_name`
-
-#### Macos
-
-`./target/app_name/app_name.app/contents/MacOS/app_name`
-
-#### Windows
-
-`/target/app_name/app_name.exe`
-
-### Create Installer Package
-
-`fbs installer`
-
-### Notes 
-
-- In order to build for a particular operating system, you must run the fbs commands from that operating system. For example, you cannot build a package for MacOS from Linux.
-
-- Prior to running `fbs installer`, you may be asked to install the FPM tool (<https://fpm.readthedocs.io/en/latest/installation.html>). On Linux this requires `sudo gem install fpm`. For more information on using fbs to package your PyQT applications, see here: <https://www.pythonguis.com/tutorials/packaging-pyqt5-apps-fbs/>.
