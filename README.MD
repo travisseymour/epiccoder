@@ -1,4 +1,7 @@
 EPICcoder
+
+![Snapshot of EPICcoder Interface](https://cogmodlab.sites.ucsc.edu/files/2022/08/epiccoder_ui_interface_snapshot-1024x925.png)
+
 ---
 
 EPICcoder is a _**<font color="orange">minimal</font>**_ programmer's text editor created for use with the EPIC, EPICpy and pyEPIC simulation environments (see <https://cogmodlab.ucsc.edu/2022/03/14/epic/>). It features syntax highlighting for the following file formats:  
