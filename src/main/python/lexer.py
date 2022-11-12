@@ -28,7 +28,6 @@ from PyQt5.QtGui import *
 
 
 class PyCustomLexer(QsciLexerCustom):
-
     def __init__(self, parent):
         super(PyCustomLexer, self).__init__(parent)
 
@@ -43,8 +42,11 @@ class PyCustomLexer(QsciLexerCustom):
         # Keywords
         self.KEYWORD_LIST = keyword.kwlist
 
-        self.builtin_functions_names = [name for name, obj in vars(builtins).items()
-                                        if isinstance(obj, types.BuiltinFunctionType)]
+        self.builtin_functions_names = [
+            name
+            for name, obj in vars(builtins).items()
+            if isinstance(obj, types.BuiltinFunctionType)
+        ]
 
         # color per style
         self.DEFAULT = 0
@@ -121,11 +123,11 @@ class PyCustomLexer(QsciLexerCustom):
             return ""
 
     def get_tokens(self, text) -> list[str, int]:
-        # 3. Tokenize the text 
+        # 3. Tokenize the text
         # ---------------------
         p = re.compile(r"[*]\/|\/[*]|\s+|\w+|\W")
 
-        # 'token_list' is a list of tuples: (token_name, token_len), ex: '(class, 5)' 
+        # 'token_list' is a list of tuples: (token_name, token_len), ex: '(class, 5)'
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
 
     def styleText(self, start: int, end: int) -> None:
@@ -157,11 +159,11 @@ class PyCustomLexer(QsciLexerCustom):
             try:
                 return token_list[n]
             except IndexError:
-                return ['']
+                return [""]
 
         def skip_space_peek(skip=None):
             i = 0
-            tok = (' ')
+            tok = " "
             if skip is not None:
                 i = skip
             while tok[0].isspace():
@@ -205,14 +207,23 @@ class PyCustomLexer(QsciLexerCustom):
                     continue
             elif tok in self.KEYWORD_LIST:
                 self.setStyling(tok_len, self.KEYWORD)
-            elif tok.isnumeric() or tok == 'self':
+            elif tok.isnumeric() or tok == "self":
                 self.setStyling(tok_len, self.CONSTANTS)
             elif tok in ["(", ")", "{", "}", "[", "]"]:
                 self.setStyling(tok_len, self.BRACKETS)
             elif tok == '"' or tok == "'":
                 self.setStyling(tok_len, self.STRING)
                 string_flag = True
-            elif tok in self.builtin_functions_names or tok in ['+', '-', '*', '/', '%', '=', '<', '>']:
+            elif tok in self.builtin_functions_names or tok in [
+                "+",
+                "-",
+                "*",
+                "/",
+                "%",
+                "=",
+                "<",
+                ">",
+            ]:
                 self.setStyling(tok_len, self.TYPES)
             else:
                 self.setStyling(tok_len, self.DEFAULT)
@@ -273,7 +284,10 @@ class TextCustomLexer(QsciLexerCustom):
         editor: QsciScintilla = self.parent()
 
         text = editor.text()[start:end]
-        token_list = [(s.lower(), i) if isinstance(s, str) else (s, i) for s, i in self.get_tokens(text)]
+        token_list = [
+            (s.lower(), i) if isinstance(s, str) else (s, i)
+            for s, i in self.get_tokens(text)
+        ]
 
         def next_tok(skip: int = None):
             if len(token_list) > 0:
@@ -301,7 +315,6 @@ class TextCustomLexer(QsciLexerCustom):
 
 
 class PPSCustomLexer(QsciLexerCustom):
-
     def __init__(self, parent):
         super(PPSCustomLexer, self).__init__(parent)
 
@@ -319,17 +332,64 @@ class PPSCustomLexer(QsciLexerCustom):
 
         # Keywords
 
-        self.RULE_SECTIONS = 'if', 'then'
-        self.COMPARISONS = ['not', 'equal', 'greater', 'least', 'different', 'less-than', 'less_than', 'greater-than',
-                            'greater_than', 'equal-to', 'equal_to']
-        self.DIRECTIVES = ['if-only-one', 'if_only_one', 'use-only-one', 'use_only_one', 'randomly-choose-one',
-                           'randomly_choose_one', 'unique']
-        self.ARCHITECTURES = ['goal', 'step', 'tag', 'visual', 'auditory', 'tactile', 'more',
-                              'initial-memory-contents', 'initial_memory_contents', 'parameters', 'named-location',
-                              'named_location', 'motor', 'ocular', 'manual', 'vocal']
-        self.KEYWORDS = ['add', 'adddb', 'del', 'delete', 'log', 'define', 'set-mode', 'set_mode', 'send-to-motor',
-                         'send_to_motor', 'delay-countdown', 'delay_countdown', 'increment', 'send-to-temporal',
-                         'send_to_temporal']
+        self.RULE_SECTIONS = "if", "then"
+        self.COMPARISONS = [
+            "not",
+            "equal",
+            "greater",
+            "least",
+            "different",
+            "less-than",
+            "less_than",
+            "greater-than",
+            "greater_than",
+            "equal-to",
+            "equal_to",
+        ]
+        self.DIRECTIVES = [
+            "if-only-one",
+            "if_only_one",
+            "use-only-one",
+            "use_only_one",
+            "randomly-choose-one",
+            "randomly_choose_one",
+            "unique",
+        ]
+        self.ARCHITECTURES = [
+            "goal",
+            "step",
+            "tag",
+            "visual",
+            "auditory",
+            "tactile",
+            "more",
+            "initial-memory-contents",
+            "initial_memory_contents",
+            "parameters",
+            "named-location",
+            "named_location",
+            "motor",
+            "ocular",
+            "manual",
+            "vocal",
+        ]
+        self.KEYWORDS = [
+            "add",
+            "adddb",
+            "del",
+            "delete",
+            "log",
+            "define",
+            "set-mode",
+            "set_mode",
+            "send-to-motor",
+            "send_to_motor",
+            "delay-countdown",
+            "delay_countdown",
+            "increment",
+            "send-to-temporal",
+            "send_to_temporal",
+        ]
 
         # color per style
         self.DEFAULT = 0
@@ -444,7 +504,10 @@ class PPSCustomLexer(QsciLexerCustom):
         editor: QsciScintilla = self.parent()
 
         text = editor.text()[start:end]
-        token_list = [(s.lower(), i) if isinstance(s, str) else (s, i) for s, i in self.get_tokens(text)]
+        token_list = [
+            (s.lower(), i) if isinstance(s, str) else (s, i)
+            for s, i in self.get_tokens(text)
+        ]
         # from pathlib import Path
         # Path('freaky_deekey.txt').write_text(str(token_list))
         string_flag = False
@@ -468,11 +531,11 @@ class PPSCustomLexer(QsciLexerCustom):
             try:
                 return token_list[n]
             except IndexError:
-                return ['']
+                return [""]
 
         def skip_space_peek(skip=None):
             i = 0
-            tok = (' ')
+            tok = " "
             if skip is not None:
                 i = skip
             while tok[0].isspace():
@@ -496,7 +559,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)
-                if tok.startswith('\n'):
+                if tok.startswith("\n"):
                     string_flag = False
                 continue
 
@@ -514,17 +577,23 @@ class PPSCustomLexer(QsciLexerCustom):
                 self.setStyling(tok_len, self.NUMBER)
             elif tok in ("(", ")"):
                 self.setStyling(tok_len, self.PARENS)
-            elif tok.startswith(';') or tok.startswith('//'):
+            elif tok.startswith(";") or tok.startswith("//"):
                 self.setStyling(tok_len, self.COMMENT)
                 string_flag = True
             else:
                 peek = peek_tok()
 
-                if len(tok) > 2 and last_token and last_token[0] == '(' and peek and peek[0].startswith('\n'):
+                if (
+                    len(tok) > 2
+                    and last_token
+                    and last_token[0] == "("
+                    and peek
+                    and peek[0].startswith("\n")
+                ):
                     self.setStyling(tok_len, self.RULE_NAME)
-                elif tok == '?' and last_token and last_token[0] in ('?', ' ', '('):
+                elif tok == "?" and last_token and last_token[0] in ("?", " ", "("):
                     self.setStyling(tok_len, self.VARIABLE)
-                elif '?' not in tok and last_token and last_token[0] == '?':
+                elif "?" not in tok and last_token and last_token[0] == "?":
                     self.setStyling(tok_len, self.VARIABLE)
                 else:
                     self.setStyling(tok_len, self.DEFAULT)

@@ -41,8 +41,12 @@ from lexer import PyCustomLexer, PPSCustomLexer, TextCustomLexer
 
 
 class CustomEditor(QsciScintilla):
-
-    def __init__(self, parent=None, file_path: Optional[Path] = None, star_func: Optional[Callable] = None):
+    def __init__(
+        self,
+        parent=None,
+        file_path: Optional[Path] = None,
+        star_func: Optional[Callable] = None,
+    ):
 
         super(CustomEditor, self).__init__(parent)
 
@@ -90,7 +94,7 @@ class CustomEditor(QsciScintilla):
         self.color1 = "#abb2bf"
         self.color2 = "#282c34"
 
-        if self.file_path.suffix == '.py':
+        if self.file_path.suffix == ".py":
             self.pylexer = QsciLexerPython(self)
 
             # Default Settings
@@ -102,17 +106,21 @@ class CustomEditor(QsciScintilla):
                 self.pylexer.setFont(QFont("Consolas", 14), i)
 
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerPython.Number)
-            self.pylexer.setColor(QColor('#F18622'), QsciLexerPython.Keyword)
+            self.pylexer.setColor(QColor("#F18622"), QsciLexerPython.Keyword)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerPython.DoubleQuotedString)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerPython.SingleQuotedString)
-            self.pylexer.setColor(QColor("#91C71E"), QsciLexerPython.TripleDoubleQuotedString)
-            self.pylexer.setColor(QColor("#91C71E"), QsciLexerPython.TripleSingleQuotedString)
+            self.pylexer.setColor(
+                QColor("#91C71E"), QsciLexerPython.TripleDoubleQuotedString
+            )
+            self.pylexer.setColor(
+                QColor("#91C71E"), QsciLexerPython.TripleSingleQuotedString
+            )
             self.pylexer.setColor(QColor("#F0A91D"), QsciLexerPython.FunctionMethodName)
             self.pylexer.setColor(QColor("#8C8C8C"), QsciLexerPython.Comment)
             self.pylexer.setColor(QColor("#8C8C8C"), QsciLexerPython.CommentBlock)
             self.pylexer.setColor(QColor("#B45DD9"), QsciLexerPython.Identifier)
 
-        elif self.file_path.suffix in ('.h', '.c', '.cpp', '.hpp'):
+        elif self.file_path.suffix in (".h", ".c", ".cpp", ".hpp"):
             self.pylexer = QsciLexerCPP(self)
 
             # Default Settings
@@ -124,7 +132,7 @@ class CustomEditor(QsciScintilla):
                 self.pylexer.setFont(QFont("Consolas", 14), i)
 
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerCPP.Number)
-            self.pylexer.setColor(QColor('#F18622'), QsciLexerCPP.Keyword)
+            self.pylexer.setColor(QColor("#F18622"), QsciLexerCPP.Keyword)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerCPP.DoubleQuotedString)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerCPP.SingleQuotedString)
             self.pylexer.setColor(QColor("#8C8C8C"), QsciLexerCPP.Comment)
@@ -132,7 +140,7 @@ class CustomEditor(QsciScintilla):
             self.pylexer.setColor(QColor("#B45DD9"), QsciLexerCPP.Identifier)
             self.pylexer.setColor(QColor("white"), QsciLexerCPP.Operator)
 
-        elif self.file_path.suffix == '.prs':
+        elif self.file_path.suffix == ".prs":
             self.pylexer = PPSCustomLexer(self)
         else:
             self.pylexer = TextCustomLexer(self)
@@ -141,10 +149,18 @@ class CustomEditor(QsciScintilla):
 
         # Api (you can add autocompletion using this)
         self.api = QsciAPIs(self.pylexer)
-        for key in keyword.kwlist + dir(__builtins__):  # adding builtin functions and keywords
+        for key in keyword.kwlist + dir(
+            __builtins__
+        ):  # adding builtin functions and keywords
             self.api.add(key)
 
-        for _, name, _ in pkgutil.iter_modules():  # adding all modules names from current interpreter
+        for (
+            _,
+            name,
+            _,
+        ) in (
+            pkgutil.iter_modules()
+        ):  # adding all modules names from current interpreter
             self.api.add(name)
 
         self.api.prepare()

@@ -34,7 +34,7 @@ class SearchItem(QListWidgetItem):
         self.lineno = lineno
         self.end = end
         self.line = line
-        self.formatted = f'{self.name}:{self.lineno}:{self.end} - {self.line} ...'
+        self.formatted = f"{self.name}:{self.lineno}:{self.end} - {self.line} ..."
         super().__init__(self.formatted)
 
     def __str__(self):
@@ -58,11 +58,15 @@ class SearchWorker(QThread):
         """
         Check if file is binary
         """
-        with open(path, 'rb') as f:
-            return b'\0' in f.read(1024)
+        with open(path, "rb") as f:
+            return b"\0" in f.read(1024)
 
     def walkdir(self, path, exclude_dirs: list, exclude_files: list):
-        for root, dirs, files, in os.walk(path, topdown=True):
+        for (
+            root,
+            dirs,
+            files,
+        ) in os.walk(path, topdown=True):
             # filtering
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
             files[:] = [f for f in files if Path(f).suffix not in exclude_files]
@@ -72,12 +76,18 @@ class SearchWorker(QThread):
         debug = False
         self.items = []
         # you can add more
-        exclude_dirs = set([".git", ".svn", ".hg", ".bzr", ".idea", "__pycache__", "venv"])
+        exclude_dirs = set(
+            [".git", ".svn", ".hg", ".bzr", ".idea", "__pycache__", "venv"]
+        )
         if self.search_project:
             exclude_dirs.remove("venv")
-        exclude_files = set([".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"])
+        exclude_files = set(
+            [".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"]
+        )
 
-        for root, _, files in self.walkdir(self.search_path, exclude_dirs, exclude_files):
+        for root, _, files in self.walkdir(
+            self.search_path, exclude_dirs, exclude_files
+        ):
             # total search limit
             if len(self.items) > 5_000:
                 break
@@ -87,7 +97,7 @@ class SearchWorker(QThread):
                     break
 
                 try:
-                    with open(full_path, 'r', encoding='utf8') as f:
+                    with open(full_path, "r", encoding="utf8") as f:
                         try:
                             reg = re.compile(self.search_text, re.IGNORECASE)
                             for i, line in enumerate(f):
@@ -97,13 +107,17 @@ class SearchWorker(QThread):
                                         full_path,
                                         i,
                                         m.end(),
-                                        line[m.start():].strip()[:50],  # limiting to 50 chars
+                                        line[m.start() :].strip()[
+                                            :50
+                                        ],  # limiting to 50 chars
                                     )
                                     self.items.append(fd)
                         except re.error as e:
-                            if debug: print(e)
+                            if debug:
+                                print(e)
                 except UnicodeDecodeError as e:
-                    if debug: print(e)
+                    if debug:
+                        print(e)
                     continue
 
         self.finished.emit(self.items)

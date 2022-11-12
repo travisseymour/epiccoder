@@ -32,12 +32,20 @@ class AppContext(ApplicationContext):
         self.main_win = None
 
         fonts = QFontDatabase()
-        fonts.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
-        fonts.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
+        fonts.addApplicationFont(
+            self.get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf")
+        )
+        fonts.addApplicationFont(
+            self.get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf")
+        )
         fonts.addApplicationFont(self.get_resource("fonts", "Consolas", "CONSOLA.TTF"))
         fonts.addApplicationFont(self.get_resource("fonts", "Consolas", "CONSOLAB.TTF"))
-        fonts.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
-        fonts.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
+        fonts.addApplicationFont(
+            self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf")
+        )
+        fonts.addApplicationFont(
+            self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf")
+        )
 
     def run(self):
         try:
@@ -47,14 +55,16 @@ class AppContext(ApplicationContext):
             start_path = Path.home()
 
         self.main_win = MainWindow(context=self)
-        self.main_win.set_folder(start_path if start_path.is_dir() else start_path.parent)
+        self.main_win.set_folder(
+            start_path if start_path.is_dir() else start_path.parent
+        )
         if start_path.is_file():
             self.main_win.open_file(start_path)
         self.main_win.show()
         return self.app.exec_()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     appctxt = AppContext()
 
     # init QSettings once so we can use default constructor throughout project
@@ -71,4 +81,3 @@ if __name__ == '__main__':
 
     exit_code = appctxt.run()
     sys.exit(exit_code)
-

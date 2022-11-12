@@ -29,9 +29,25 @@ from pathlib import Path
 
 from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QLabel, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QSplitter, \
-    QFileSystemModel, QTreeView, QLineEdit, QCheckBox, QListWidget, QSpacerItem, QTabWidget, QMessageBox, QFileDialog, \
-    QApplication
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QLabel,
+    QFrame,
+    QSizePolicy,
+    QHBoxLayout,
+    QVBoxLayout,
+    QSplitter,
+    QFileSystemModel,
+    QTreeView,
+    QLineEdit,
+    QCheckBox,
+    QListWidget,
+    QSpacerItem,
+    QTabWidget,
+    QMessageBox,
+    QFileDialog,
+    QApplication,
+)
 
 from customeditor import CustomEditor
 from fuzzy_searcher import SearchItem, SearchWorker
@@ -40,7 +56,9 @@ from version import __version__
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-int_gen = (i for i in range(sys.maxsize))  # generator for successive integers from 1 to sys.maxsize
+int_gen = (
+    i for i in range(sys.maxsize)
+)  # generator for successive integers from 1 to sys.maxsize
 
 
 class MainWindow(QMainWindow):
@@ -54,23 +72,29 @@ class MainWindow(QMainWindow):
 
         # init settings
         self.settings = QSettings()
-        self.main_window_width = self.settings.value('main_window_width', type=int, defaultValue=1300)
-        self.main_window_height = self.settings.value('main_window_height', type=int, defaultValue=900)
+        self.main_window_width = self.settings.value(
+            "main_window_width", type=int, defaultValue=1300
+        )
+        self.main_window_height = self.settings.value(
+            "main_window_height", type=int, defaultValue=900
+        )
 
         self.init_ui()
 
         self.current_file = None
         self.current_side_bar = None
 
-        self.setWindowIcon(QIcon(self.context.get_resource('uiicons', 'app-icon.svg')))
+        self.setWindowIcon(QIcon(self.context.get_resource("uiicons", "app-icon.svg")))
 
     def init_ui(self):
         self.setWindowTitle(f"EPIC Coder v{__version__}")
         self.resize(self.main_window_width, self.main_window_height)
 
         style_sheet = Path(self.context.get_resource("css/style.qss")).read_text()
-        style_sheet = style_sheet.replace(":/icons/close-icon.svg",
-                                          self.context.get_resource("uiicons", "close-icon.svg"))
+        style_sheet = style_sheet.replace(
+            ":/icons/close-icon.svg",
+            self.context.get_resource("uiicons", "close-icon.svg"),
+        )
         self.setStyleSheet(style_sheet)
 
         # setup font
@@ -156,12 +180,14 @@ class MainWindow(QMainWindow):
         """
         Check if file is binary
         """
-        with open(path, 'rb') as f:
-            return b'\0' in f.read(1024)
+        with open(path, "rb") as f:
+            return b"\0" in f.read(1024)
 
     def add_star(self, file_path: Path):
         for i in range(self.tab_view.count()):
-            if str(self.tab_view.tabText(i)).endswith(f"{Path(file_path.parent.name, file_path.name)}"):
+            if str(self.tab_view.tabText(i)).endswith(
+                f"{Path(file_path.parent.name, file_path.name)}"
+            ):
                 self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
                 return
 
@@ -176,7 +202,9 @@ class MainWindow(QMainWindow):
         editor: CustomEditor = self.get_editor(new_file_path)
 
         if is_new_file:
-            self.tab_view.addTab(editor, f"*{Path(new_file_path.parent.name, new_file_path.name)}")
+            self.tab_view.addTab(
+                editor, f"*{Path(new_file_path.parent.name, new_file_path.name)}"
+            )
             self.setWindowTitle(str(new_file_path))
             self.statusBar().showMessage(f"Opened '{new_file_path.name}")
             self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
@@ -190,13 +218,17 @@ class MainWindow(QMainWindow):
         # check if file already open
         for i in range(self.tab_view.count()):
             # print(f"{self.tab_view.widget(i).file_type=}")  # keep to remind me that I can access widget..need shortly
-            if str(self.tab_view.tabText(i)).endswith(f"{Path(new_file_path.parent.name, new_file_path.name)}"):
+            if str(self.tab_view.tabText(i)).endswith(
+                f"{Path(new_file_path.parent.name, new_file_path.name)}"
+            ):
                 self.tab_view.setCurrentIndex(i)
                 self.current_file = new_file_path
                 return
 
         # create new tab
-        self.tab_view.addTab(editor, f"{Path(new_file_path.parent.name, new_file_path.name)}")
+        self.tab_view.addTab(
+            editor, f"{Path(new_file_path.parent.name, new_file_path.name)}"
+        )
         editor.setText(new_file_path.read_text())
         self.setWindowTitle(str(new_file_path))
         self.current_file = new_file_path
@@ -225,7 +257,8 @@ class MainWindow(QMainWindow):
         frame.setFrameShape(QFrame.NoFrame)
         frame.setFrameShadow(QFrame.Plain)
         frame.setContentsMargins(0, 0, 0, 0)
-        frame.setStyleSheet('''
+        frame.setStyleSheet(
+            """
             QFrame {
                 background-color: #21252b;
                 border-radius: 5px;
@@ -236,12 +269,13 @@ class MainWindow(QMainWindow):
             QFrame:hover {
                 color: white;
             }
-        ''')
+        """
+        )
         return frame
 
     def set_up_body(self):
 
-        # Body        
+        # Body
         body_frame = QFrame()
         body_frame.setFrameShape(QFrame.NoFrame)
         body_frame.setFrameShadow(QFrame.Plain)
@@ -259,20 +293,25 @@ class MainWindow(QMainWindow):
         self.side_bar = QFrame()
         self.side_bar.setFrameShape(QFrame.StyledPanel)
         self.side_bar.setFrameShadow(QFrame.Plain)
-        self.side_bar.setStyleSheet(f'''
+        self.side_bar.setStyleSheet(
+            f"""
             background-color: {self.side_bar_clr};
-        ''')
+        """
+        )
         side_bar_layout = QVBoxLayout()
         side_bar_layout.setContentsMargins(5, 10, 5, 0)
         side_bar_layout.setSpacing(0)
         side_bar_layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
         # setup labels
-        folder_label = self.get_side_bar_label(self.context.get_resource("uiicons", "folder-icon-blue.svg"),
-                                               "folder-icon")
+        folder_label = self.get_side_bar_label(
+            self.context.get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon"
+        )
         side_bar_layout.addWidget(folder_label)
 
-        search_label = self.get_side_bar_label(self.context.get_resource("uiicons", "search-icon.svg"), "search-icon")
+        search_label = self.get_side_bar_label(
+            self.context.get_resource("uiicons", "search-icon.svg"), "search-icon"
+        )
         side_bar_layout.addWidget(search_label)
 
         self.side_bar.setLayout(side_bar_layout)
@@ -334,7 +373,8 @@ class MainWindow(QMainWindow):
         search_input.setPlaceholderText("Search")
         search_input.setFont(self.window_font)
         search_input.setAlignment(Qt.AlignmentFlag.AlignTop)
-        search_input.setStyleSheet("""
+        search_input.setStyleSheet(
+            """
         QLineEdit {
             background-color: #21252b;
             border-radius: 5px;
@@ -346,7 +386,8 @@ class MainWindow(QMainWindow):
         QLineEdit:hover {
             color: white;
             }
-        """)
+        """
+        )
 
         ############# CHECKBOX ################
         self.search_checkbox = QCheckBox("Search in modules")
@@ -360,7 +401,7 @@ class MainWindow(QMainWindow):
             lambda text: self.search_worker.update(
                 text,
                 self.model.rootDirectory().absolutePath(),
-                self.search_checkbox.isChecked()
+                self.search_checkbox.isChecked(),
             )
         )
 
@@ -368,7 +409,8 @@ class MainWindow(QMainWindow):
         ###### SEARCH ListView ##########
         self.search_list_view = QListWidget()
         self.search_list_view.setFont(QFont("Fira Code", 13))
-        self.search_list_view.setStyleSheet("""
+        self.search_list_view.setStyleSheet(
+            """
         QListWidget {
             background-color: #21252b;
             border-radius: 5px;
@@ -376,13 +418,16 @@ class MainWindow(QMainWindow):
             padding: 5px;
             color: #D3D3D3;
         }
-        """)
+        """
+        )
 
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
         search_layout.addWidget(self.search_checkbox)
         search_layout.addWidget(search_input)
-        search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
+        search_layout.addSpacerItem(
+            QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        )
         search_layout.addWidget(self.search_list_view)
 
         self.search_frame.setLayout(search_layout)
@@ -429,10 +474,12 @@ class MainWindow(QMainWindow):
 
     def close_tab(self, index):
         if self.tab_view.tabText(index).startswith("*"):
-            ret = QMessageBox.question(self,
-                                       'Changed File Alert!',
-                                       f'Really Close {Path(self.tab_view.tabText(index)).name} and Ignore Changes?',
-                                       buttons=QMessageBox.Yes | QMessageBox.No)
+            ret = QMessageBox.question(
+                self,
+                "Changed File Alert!",
+                f"Really Close {Path(self.tab_view.tabText(index)).name} and Ignore Changes?",
+                buttons=QMessageBox.Yes | QMessageBox.No,
+            )
             if ret == QMessageBox.No:
                 return
 
@@ -464,7 +511,11 @@ class MainWindow(QMainWindow):
             p = Path(path)
             self.set_new_tab(p)
         except Exception as e:
-            QMessageBox.warning(self, 'Problem With Folder Choice', f'Unable to open {str(path)}: {str(e)}')
+            QMessageBox.warning(
+                self,
+                "Problem With Folder Choice",
+                f"Unable to open {str(path)}: {str(e)}",
+            )
 
     def new_file(self):
         self.set_new_tab(None, is_new_file=True)
@@ -477,31 +528,37 @@ class MainWindow(QMainWindow):
 
         self.current_file.write_text(editor.text())
         # self.tab_view.setTabText(self.tab_view.currentIndex(), self.current_file.name)
-        self.tab_view.setTabText(self.tab_view.currentIndex(),
-                                 f"{Path(self.current_file.parent.name, self.current_file.name)}")
+        self.tab_view.setTabText(
+            self.tab_view.currentIndex(),
+            f"{Path(self.current_file.parent.name, self.current_file.name)}",
+        )
         self.statusBar().showMessage(f"Saved {self.current_file.name}", 2000)
 
     def save_as(self):
-        # save as 
+        # save as
         editor = self.tab_view.currentWidget()
         if editor is None:
             return
 
         initial_name = str(self.tab_view.currentWidget().file_path)
         if self.tab_view.currentWidget().file_path.suffix:
-            initial_filter = f"*{self.tab_view.currentWidget().file_path.suffix.lower()}"
+            initial_filter = (
+                f"*{self.tab_view.currentWidget().file_path.suffix.lower()}"
+            )
         else:
-            initial_filter = ''
+            initial_filter = ""
 
-        file_path = QFileDialog.getSaveFileName(self,
-                                                caption="Save As",
-                                                directory=initial_name,
-                                                filter="All Files (*);;PRS Rule Files (*.prs);;"
-                                                       "Text Files (*.txt);;Python Files (*.py);;"
-                                                       "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
-                                                initialFilter=initial_filter)[0]
+        file_path = QFileDialog.getSaveFileName(
+            self,
+            caption="Save As",
+            directory=initial_name,
+            filter="All Files (*);;PRS Rule Files (*.prs);;"
+            "Text Files (*.txt);;Python Files (*.py);;"
+            "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
+            initialFilter=initial_filter,
+        )[0]
 
-        if file_path == '':
+        if file_path == "":
             self.statusBar().showMessage("Cancelled", 2000)
             return
 
@@ -513,7 +570,9 @@ class MainWindow(QMainWindow):
             return
 
         # self.tab_view.setTabText(self.tab_view.currentIndex(), path.name)
-        self.tab_view.setTabText(self.tab_view.currentIndex(), f"{Path(path.parent.name, path.name)}")
+        self.tab_view.setTabText(
+            self.tab_view.currentIndex(), f"{Path(path.parent.name, path.name)}"
+        )
 
         self.statusBar().showMessage(f"Saved {path.name}", 2000)
         self.current_file = path
@@ -526,14 +585,16 @@ class MainWindow(QMainWindow):
             ops = QFileDialog.Options()  # this is optional
             ops |= QFileDialog.DontUseNativeDialog
             # TODO: add support for opening multiple files later. for now it can only open one at a time
-            new_file, _ = QFileDialog.getOpenFileName(self,
-                                                      caption="Pick A File",
-                                                      directory=str(self.model.rootDirectory().absolutePath()),
-                                                      filter="All Files (*);;PRS Rule Files (*.prs);;"
-                                                             "Text Files (*.txt);;Python Files (*.py);;"
-                                                             "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
-                                                      options=ops)
-            if new_file == '':
+            new_file, _ = QFileDialog.getOpenFileName(
+                self,
+                caption="Pick A File",
+                directory=str(self.model.rootDirectory().absolutePath()),
+                filter="All Files (*);;PRS Rule Files (*.prs);;"
+                "Text Files (*.txt);;Python Files (*.py);;"
+                "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
+                options=ops,
+            )
+            if new_file == "":
                 self.statusBar().showMessage("Cancelled", 2000)
                 return
             f = Path(new_file)
@@ -545,7 +606,9 @@ class MainWindow(QMainWindow):
         ops = QFileDialog.Options()  # this is optional
         ops |= QFileDialog.DontUseNativeDialog
 
-        new_folder = QFileDialog.getExistingDirectory(self, "Pick A Folder", "", options=ops)
+        new_folder = QFileDialog.getExistingDirectory(
+            self, "Pick A Folder", "", options=ops
+        )
         if new_folder:
             self.model.setRootPath(new_folder)
             self.tree_view.setRootIndex(self.model.index(new_folder))
@@ -568,17 +631,19 @@ class MainWindow(QMainWindow):
             editor.paste()
 
     def resizeEvent(self, event: QResizeEvent):
-        self.settings.setValue('main_window_width', self.size().width())
-        self.settings.setValue('main_window_height', self.size().height())
+        self.settings.setValue("main_window_width", self.size().width())
+        self.settings.setValue("main_window_height", self.size().height())
 
     def closeEvent(self, event: QCloseEvent):
         for i in range(self.tab_view.count()):
             if str(self.tab_view.tabText(i)).startswith("*"):
 
-                ret = QMessageBox.question(self,
-                                           'Changed File Alert!',
-                                           'Really Close Application and Ignore Changes?',
-                                           buttons=QMessageBox.Yes | QMessageBox.No)
+                ret = QMessageBox.question(
+                    self,
+                    "Changed File Alert!",
+                    "Really Close Application and Ignore Changes?",
+                    buttons=QMessageBox.Yes | QMessageBox.No,
+                )
                 if ret == QMessageBox.Yes:
                     event.accept()
                 else:
@@ -590,8 +655,10 @@ class MainWindow(QMainWindow):
         event.accept()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication([])
     window = MainWindow()
-    window.set_folder(Path('/home/nogard/Dropbox/Documents/python_coding/EPICcoder/samples'))
+    window.set_folder(
+        Path("/home/nogard/Dropbox/Documents/python_coding/EPICcoder/samples")
+    )
     sys.exit(app.exec())
