@@ -196,7 +196,7 @@ class MainWindow(QMainWindow):
         return Path(self.model.rootPath(), f"untitled{next(int_gen)}.txt")
 
     def set_new_tab(self, path: Path, is_new_file=False):
-        if not path.is_file():
+        if path and not path.is_file():
             return
 
         new_file_path = self.next_new_file_path() if is_new_file else path
