@@ -29,3 +29,17 @@ Note: This project's code is released under the **GPLv3** license to comply with
 Binaries are available for Linux, MacOS, and Windows at <https://cogmodlab.sites.ucsc.edu/2022/08/25/epiccoder/>.
 To create these binaries, the entire project is managed by the pro version of the F-Man Build System (fbs) (<https://build-system.fman.io/>). Also see <https://www.pythonguis.com/tutorials/packaging-pyqt5-apps-fbs/>.
 
+---
+
+## Changes
+
+- 1.1.0
+  1. Unlinked search and file panel sizes 
+  2. Added explicit new-file creation by type
+  3. Added ability to duplicate current file
+  4. Changed file selection to double-click
+  5. Added ability to delete current file
+
+- 1.0.0
+  1. Initial version
+

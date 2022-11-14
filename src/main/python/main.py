@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QCoreApplication, QSettings
+from PyQt5.QtCore import QCoreApplication, QSettings, QSize
 from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtWidgets import QSizePolicy
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from mainwindow import MainWindow
 import sys
@@ -55,6 +56,7 @@ class AppContext(ApplicationContext):
             start_path = Path.home()
 
         self.main_win = MainWindow(context=self)
+        self.main_win.file_manager_frame.resize(QSize(200, self.main_win.file_manager_frame.height()))
         self.main_win.set_folder(
             start_path if start_path.is_dir() else start_path.parent
         )
