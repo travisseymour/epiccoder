@@ -54,8 +54,6 @@ from version import __version__
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-import PySimpleGUIQt as sg
-
 int_gen = (
     i for i in range(sys.maxsize)
 )  # generator for successive integers from 1 to sys.maxsize
