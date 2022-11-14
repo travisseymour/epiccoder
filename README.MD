@@ -39,6 +39,7 @@ To create these binaries, the entire project is managed by the pro version of th
   3. Added ability to duplicate current file
   4. Changed file selection to double-click
   5. Added ability to delete current file
+  6. Fixed issue with comment styling bleeding onto next line in .prs files
 
 - 1.0.0
   1. Initial version
