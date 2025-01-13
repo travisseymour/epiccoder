@@ -1,0 +1,71 @@
+# To install deps from toml
+# -------------------------
+# > pip install .[dev] && pip uninstall .
+# OR
+# > make install
+#
+# To push to github
+# -------------------------
+# See Workflow.md
+
+# NOTE: Fix PySide6 xcb plugin error on linux by installing: sudo apt install libxcb-cursor0
+
+[build-system]
+requires = ["setuptools>=46.4.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "EPICcoder"
+version = "2025.1.12.4"
+description = "EPICcoder: Minimal programmer's text editor for EPIC Production Rule Files and more."
+authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
+license = { text = "GPLv3" }
+readme = "ReadMe.md"
+requires-python = ">=3.9"
+keywords = ["texteditor", "programmers", "EPIC", "production rules"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "PyQt5==5.15.7",
+    "QScintilla==2.13.3",
+    "tomli>=2.2.1",
+]
+
+[project.urls]
+"Bug Tracker" = "https://github.com/travisseymour/epiccoder/issues"
+"Documentation" = "https://github.com/travisseymour/epiccoder#readme"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "ruff",
+    "build",
+    "check-manifest"
+#    "qt6-tools"
+]
+
+[project.scripts]
+epiccoder = "epiccoder.main:main"
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*", "info", "info.*", "build", "pyepicgui.egg-info"]
+
+# pull in any files defined in MANIFEST.in use with importlib.resources
+[tool.setuptools]
+include-package-data = true
+
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
+lint.ignore = ["F821", "F841", "E722"]  # undefined name, assigned but unused variable, bare except

@@ -1,8 +1,0 @@
-1. run cmd.exe as an administrator
-2. disable Windows Security Realtime Protection
-3. cd to EPICcoder code folder
-4. enable virtual env
-5. run fbs freeze
-6. verity by running target\EPICcoder\EPICcoder.exe
-7. run fbs installer
-8. re-enable Windows Security Realtime Protection
