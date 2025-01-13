@@ -58,11 +58,13 @@ from epiccoder.resource import get_resource
 
 from epiccoder.version import __version__
 
+
 # Configurable generator for integers, starting at 1 by default
 def integer_generator(start=1, end=sys.maxsize):
     """Generator for successive integers from start to end."""
     for i in range(start, end):
         yield i
+
 
 int_gen = integer_generator(0)  # Starts from 1 up to sys.maxsize
 
@@ -627,10 +629,7 @@ class MainWindow(QMainWindow):
             self.set_new_tab(p)
         except Exception as e:
             warning_box(
-                self,
-                "Problem With Folder Choice",
-                f"Unable to open {str(path)}: {str(e)}",
-                font=self.window_font
+                self, "Problem With Folder Choice", f"Unable to open {str(path)}: {str(e)}", font=self.window_font
             )
 
     def new_file(self, file_type: str):
@@ -681,12 +680,7 @@ class MainWindow(QMainWindow):
             else:
                 self.current_file = None
         except Exception as e:
-            critical_box(
-                self,
-                "File I/O Error!",
-                f"Unable To Delete File {str(p)}: ({str(e)})",
-                font=self.window_font
-            )
+            critical_box(self, "File I/O Error!", f"Unable To Delete File {str(p)}: ({str(e)})", font=self.window_font)
 
     def save_file(self):
         if self.current_file is None and self.tab_view.count() > 0:

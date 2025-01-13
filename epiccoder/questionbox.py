@@ -51,6 +51,7 @@ def question_box(
 
     return message_box.exec_()
 
+
 def critical_box(
     parent: Optional[QWidget],
     title: str,
@@ -78,6 +79,7 @@ def critical_box(
         message_box.setFont(font)
 
     return message_box.exec_()
+
 
 def warning_box(
     parent: Optional[QWidget],

@@ -29,6 +29,7 @@ def get_version_from_pyproject():
         pyproject_data = tomli.load(f)
         return pyproject_data.get("project", {}).get("version", "Unknown")
 
+
 try:
     # Try to get version from installed package
     __version__ = version("EPICcoder")

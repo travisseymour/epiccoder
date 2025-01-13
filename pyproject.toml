@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.1.12.4"
+version = "2025.1.13.0"
 description = "EPICcoder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
@@ -33,8 +33,8 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 dependencies = [
-    "PyQt5==5.15.7",
-    "QScintilla==2.13.3",
+    "PyQt5==5.15.11",      # 5.15.7 (failed on 3.9 + Sonoma)
+    "QScintilla==2.14.1",  # 2.13.3 (failed on 3.9 + Sonoma)
     "tomli>=2.2.1",
 ]
 

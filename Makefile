@@ -8,3 +8,8 @@ install:
 clean:
 	rm -rf build/ dist/ *.egg-info
 
+# Format the code
+format:
+	ruff check epiccoder --fix
+	ruff format epiccoder
+	black epiccoder

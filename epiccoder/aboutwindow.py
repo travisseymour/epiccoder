@@ -28,6 +28,7 @@ from epiccoder.resource import get_resource
 
 from epiccoder.version import __version__
 
+
 class AboutWin(QDialog):
     def __init__(self, parent):
         super(AboutWin, self).__init__(parent=parent)
