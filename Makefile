@@ -2,7 +2,7 @@
 # Install the package with development dependencies
 # alternative to `pip install -r requirements`
 install:
-	pip install .[dev] && pip uninstall EPICcoder -y
+	pip install .[dev] && pip uninstall EPICcoder -y && make clean
 
 # Clean up build artifacts
 clean:

@@ -107,9 +107,11 @@ Start EPICcoder by opening your operating system's terminal application and type
 epiccoder
 ```
 
+---
+
 ## Upgrade EPICcoder
 
-Start EPICcoder by opening your operating system's terminal application and type this command:
+Upgrade EPICcoder by opening your operating system's terminal application and type this command:
 
 ```bash
 uv tool upgrade epiccoder
@@ -117,7 +119,7 @@ uv tool upgrade epiccoder
 
 ## Uninstall EPICcoder
 
-Start EPICcoder by opening your operating system's terminal application and type this command:
+Uninstall EPICcoder by opening your operating system's terminal application and type this command:
 
 ```bash
 uv tool uninstall epiccoder
