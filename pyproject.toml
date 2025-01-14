@@ -16,11 +16,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.1.14.0"
+version = "2025.1.14.1"
 description = "EPICcoder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
-readme = "ReadMe.md"
+readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["texteditor", "programmers", "EPIC", "production rules"]
 classifiers = [
