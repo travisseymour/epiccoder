@@ -790,4 +790,3 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         event.accept()
-

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 import builtins
 from pathlib import Path
 from typing import Callable, Optional
@@ -41,6 +42,7 @@ class CustomEditor(QsciScintilla):
     CustomEditor is a text editor widget built on QsciScintilla that supports syntax highlighting,
     auto-completion, and change detection for a variety of file types.
     """
+
     def __init__(
         self,
         parent=None,

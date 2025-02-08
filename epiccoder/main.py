@@ -47,6 +47,7 @@ def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "mono
     font.setPointSize(size)
     return font
 
+
 def get_start_path() -> Path:
     try:
         path = Path(sys.argv[1])
