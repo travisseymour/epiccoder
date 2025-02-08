@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
 
         if is_new_file:
             self.tab_view.addTab(editor, f"*{Path(new_file_path.parent.name, new_file_path.name)}")
-            self.setWindowTitle(str(new_file_path))
+            # self.setWindowTitle(f"EPIC Coder v{__version__} | {str(new_file_path)}")
             self.statusBar().showMessage(f"Opened '{new_file_path.name}", 4000)
             self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
             self.current_file = None
@@ -310,7 +310,7 @@ class MainWindow(QMainWindow):
         # create new tab
         self.tab_view.addTab(editor, f"{Path(new_file_path.parent.name, new_file_path.name)}")
         editor.setText(new_file_path.read_text())
-        self.setWindowTitle(str(new_file_path))
+        # self.setWindowTitle(f"EPIC Coder v{__version__} | {str(new_file_path)}")
         self.current_file = new_file_path
         self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
         self.statusBar().showMessage(f"Opened {new_file_path.name}", 4000)
