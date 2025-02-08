@@ -47,6 +47,14 @@ def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "mono
     font.setPointSize(size)
     return font
 
+def get_start_path() -> Path:
+    try:
+        path = Path(sys.argv[1])
+        assert path.is_dir() or path.is_file()
+    except (IndexError, AssertionError):
+        path = Path.home()
+    return path
+
 
 def main():
     # Create the application instance
@@ -58,18 +66,14 @@ def main():
 
     # Set the font for the application
     default_font = get_default_font(family="monospace", size=14)
-    QApplication.instance().setFont(default_font)
+    app.setFont(default_font)
 
     # init QSettings once so we can use default constructor throughout project
     QCoreApplication.setOrganizationName("TravisSeymour")
     QCoreApplication.setOrganizationDomain("travisseymour.com")
     QCoreApplication.setApplicationName("EPICcoder")
 
-    try:
-        start_path = Path(sys.argv[1])
-        assert start_path.is_dir() or start_path.is_file()
-    except:
-        start_path = Path.home()
+    start_path = get_start_path()
 
     main_win = MainWindow()
     main_win.file_manager_frame.resize(QSize(200, main_win.file_manager_frame.height()))
