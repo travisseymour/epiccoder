@@ -421,7 +421,7 @@ class MainWindow(QMainWindow):
         ##############################
         ###### FILE VIEWER ##########
         self.tree_view = QTreeView()
-        self.tree_view.setFont(QFont("Fira Code", 13))
+        self.tree_view.setFont(self.window_font)
         self.tree_view.setModel(self.model)
         self.tree_view.setRootIndex(self.model.index(os.getcwd()))
         self.tree_view.setSelectionMode(QTreeView.SingleSelection)
@@ -491,7 +491,7 @@ class MainWindow(QMainWindow):
         ##############################
         ###### SEARCH ListView ##########
         self.search_list_view = QListWidget()
-        self.search_list_view.setFont(QFont("Fira Code", 13))
+        self.search_list_view.setFont(self.window_font)
         self.search_list_view.setStyleSheet(
             """
         QListWidget {
