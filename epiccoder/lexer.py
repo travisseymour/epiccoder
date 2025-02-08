@@ -22,7 +22,7 @@ import builtins
 import keyword
 import re
 import types
-from typing import Optional
+from typing import Optional, List, Tuple
 
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
@@ -99,6 +99,8 @@ class PyCustomLexer(QsciLexerCustom):
         self.setFont(font, self.CLASSES)
         self.setFont(font, self.FUNCTION_DEF)
 
+        self.token_pattern = re.compile(r"[*]\/|\/[*]|\s+|\w+|\W")
+
     def language(self) -> str:
         return "PYCustomLexer"
 
@@ -128,11 +130,10 @@ class PyCustomLexer(QsciLexerCustom):
         else:
             return ""
 
-    @staticmethod
-    def get_tokens(text) -> list[str, int]:
+    def get_tokens(self, text: str) -> List[Tuple[str, int]]:
         # 3. Tokenize the text
         # ---------------------
-        p = re.compile(r"[*]\/|\/[*]|\s+|\w+|\W")
+        p = self.token_pattern
 
         # 'token_list' is a list of tuples: (token_name, token_len), ex: '(class, 5)'
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
@@ -192,8 +193,8 @@ class PyCustomLexer(QsciLexerCustom):
 
             if tok == "class":
                 name, ni = skip_space_peek()
-                brac_or_colon, _ = skip_space_peek(ni)
-                if name[0].isidentifier() and brac_or_colon[0] in (":", "("):
+                brace_or_colon, _ = skip_space_peek(ni)
+                if name[0].isidentifier() and brace_or_colon[0] in (":", "("):
                     self.setStyling(tok_len, self.KEYWORD)
                     _ = next_tok(ni)
                     self.setStyling(name[1] + 1, self.CLASSES)
@@ -271,6 +272,8 @@ class TextCustomLexer(QsciLexerCustom):
         self.setPaper(self.default_bg_color, self.DEFAULT)
         self.setPaper(self.default_bg_color, self.NUMBER)
 
+        self.token_pattern = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
+
     def description(self, style: int) -> str:
         if style == self.DEFAULT:
             return "DEFAULT"
@@ -279,9 +282,8 @@ class TextCustomLexer(QsciLexerCustom):
         else:
             return ""
 
-    @staticmethod
-    def get_tokens(text) -> list[str, int]:
-        p = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
+    def get_tokens(self, text) -> list[str, int]:
+        p = self.token_pattern
 
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
 
@@ -465,6 +467,8 @@ class PPSCustomLexer(QsciLexerCustom):
         self.setFont(normal_font, self.VARIABLE)
         self.setFont(bold_font, self.KEYWORD)
 
+        self.token_pattern = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
+
     def language(self) -> str:
         return "PPS_Rule_Lexer"
 
@@ -494,12 +498,11 @@ class PPSCustomLexer(QsciLexerCustom):
         else:
             return ""
 
-    @staticmethod
-    def get_tokens(text) -> list[str, int]:
+    def get_tokens(self, text) -> list[str, int]:
         # 3. Tokenize the text
         # ---------------------
 
-        p = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
+        p = self.token_pattern
 
         # 'token_list' is a list of tuples: (token_name, token_len), ex: '(class, 5)'
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
