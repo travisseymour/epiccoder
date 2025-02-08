@@ -145,14 +145,12 @@ class MainWindow(QMainWindow):
         open_file: QAction = file_menu.addAction("Open File")
         open_file.setFont(self.window_font)
         open_file.setShortcut("Ctrl+O")
-        if hasattr(open_file.triggered, "connect"):
-            open_file.triggered.connect(self.open_file)
+        open_file.triggered.connect(self.open_file)
 
         open_folder: QAction = file_menu.addAction("Open Folder")
         open_folder.setFont(self.window_font)
         open_folder.setShortcut("Ctrl+K")
-        if hasattr(open_folder.triggered, "connect"):
-            open_folder.triggered.connect(self.open_folder)
+        open_folder.triggered.connect(self.open_folder)
 
         file_menu.addSeparator()
 
@@ -161,14 +159,12 @@ class MainWindow(QMainWindow):
         save_file: QAction = file_menu.addAction("Save")
         save_file.setFont(self.window_font)
         save_file.setShortcut("Ctrl+S")
-        if hasattr(save_file.triggered, "connect"):
-            save_file.triggered.connect(self.save_file)
+        save_file.triggered.connect(self.save_file)
 
         save_as: QAction = file_menu.addAction("Save As")
         save_as.setFont(self.window_font)
         save_as.setShortcut("Ctrl+Shift+S")
-        if hasattr(save_as.triggered, "connect"):
-            save_as.triggered.connect(self.save_as)
+        save_as.triggered.connect(self.save_as)
 
         file_menu.addSeparator()
 
@@ -177,24 +173,19 @@ class MainWindow(QMainWindow):
         new_file_menu.setFont(self.window_font)
 
         txt_action: QAction = QAction("Text File (*.txt)", self)
-        if hasattr(txt_action.triggered, "connect"):
-            txt_action.triggered.connect(partial(self.new_file, ".txt"))
+        txt_action.triggered.connect(partial(self.new_file, ".txt"))
 
         prs_action: QAction = QAction("EPIC Production Rule File (*.prs)", self)
-        if hasattr(prs_action.triggered, "connect"):
-            prs_action.triggered.connect(partial(self.new_file, ".prs"))
+        prs_action.triggered.connect(partial(self.new_file, ".prs"))
 
         py_action: QAction = QAction("Python Code File (*.py)", self)
-        if hasattr(py_action.triggered, "connect"):
-            py_action.triggered.connect(partial(self.new_file, ".py"))
+        py_action.triggered.connect(partial(self.new_file, ".py"))
 
         cpp_action: QAction = QAction("C++ Code File (*.cpp)", self)
-        if hasattr(cpp_action.triggered, "connect"):
-            cpp_action.triggered.connect(partial(self.new_file, ".cpp"))
+        cpp_action.triggered.connect(partial(self.new_file, ".cpp"))
 
         h_action: QAction = QAction("C++ Header File (*.h)", self)
-        if hasattr(h_action.triggered, "connect"):
-            h_action.triggered.connect(partial(self.new_file, ".h"))
+        h_action.triggered.connect(partial(self.new_file, ".h"))
 
         for obj in (txt_action, prs_action, py_action, cpp_action, h_action):
             new_file_menu.addAction(obj)
@@ -207,8 +198,7 @@ class MainWindow(QMainWindow):
 
         self.dupe_file: QAction = file_menu.addAction("Duplicate")
         self.dupe_file.setShortcut("Ctrl+D")
-        if hasattr(self.dupe_file.triggered, "connect"):
-            self.dupe_file.triggered.connect(self.duplicate_file)
+        self.dupe_file.triggered.connect(self.duplicate_file)
         self.dupe_file.setEnabled(False)
 
         file_menu.addSeparator()
@@ -217,8 +207,7 @@ class MainWindow(QMainWindow):
 
         self.delete_file: QAction = file_menu.addAction("Delete")
         self.delete_file.setShortcut("Ctrl+X")
-        if hasattr(self.delete_file.triggered, "connect"):
-            self.delete_file.triggered.connect(self.remove_file)
+        self.delete_file.triggered.connect(self.remove_file)
         self.delete_file.setEnabled(False)
 
         file_menu.addSeparator()
@@ -227,8 +216,7 @@ class MainWindow(QMainWindow):
 
         quit_app: QAction = file_menu.addAction("Quit")
         quit_app.setShortcut("Ctrl+Q")
-        if hasattr(quit_app.triggered, "connect"):
-            quit_app.triggered.connect(self.close)
+        quit_app.triggered.connect(self.close)
 
         # Edit menu
         edit_menu: QMenu = menu_bar.addMenu("Edit")
@@ -236,13 +224,11 @@ class MainWindow(QMainWindow):
 
         copy_action: QAction = edit_menu.addAction("Copy")
         copy_action.setShortcut("Ctrl+C")
-        if hasattr(copy_action.triggered, "connect"):
-            copy_action.triggered.connect(self.copy)
+        copy_action.triggered.connect(self.copy)
 
         paste_action: QAction = edit_menu.addAction("Paste")
         paste_action.setShortcut("Ctrl+V")
-        if hasattr(paste_action.triggered, "connect"):
-            paste_action.triggered.connect(self.paste)
+        paste_action.triggered.connect(self.paste)
 
         # Help menu
 
@@ -251,8 +237,7 @@ class MainWindow(QMainWindow):
 
         about: QAction = help_menu.addAction("About")
         about.setShortcut("Ctrl+A")
-        if hasattr(about.triggered, "connect"):
-            about.triggered.connect(self.show_about)
+        about.triggered.connect(self.show_about)
 
         # help = help_menu.addAction("Help")
         # help.setShortcut("Ctrl+H")
@@ -444,12 +429,10 @@ class MainWindow(QMainWindow):
         self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
         # add custom context menu
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        if hasattr(self.tree_view.customContextMenuRequested, "connect"):
-            self.tree_view.customContextMenuRequested.connect(self.tree_view_context_menu)
+        self.tree_view.customContextMenuRequested.connect(self.tree_view_context_menu)
         # handling click
         # self.tree_view.clicked.connect(self.tree_view_clicked)
-        if hasattr(self.tree_view.doubleClicked, "connect"):
-            self.tree_view.doubleClicked.connect(self.tree_view_clicked)
+        self.tree_view.doubleClicked.connect(self.tree_view_clicked)
         self.tree_view.setIndentation(10)
         self.tree_view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
         # Hide header and hide other columns except for name
@@ -497,14 +480,13 @@ class MainWindow(QMainWindow):
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
 
-        if hasattr(search_input.textChanged, "connect"):
-            search_input.textChanged.connect(
-                lambda text: self.search_worker.update(
-                    text,
-                    self.model.rootDirectory().absolutePath(),
-                    self.search_checkbox.isChecked(),
-                )
+        search_input.textChanged.connect(
+            lambda text: self.search_worker.update(
+                text,
+                self.model.rootDirectory().absolutePath(),
+                self.search_checkbox.isChecked(),
             )
+        )
 
         ##############################
         ###### SEARCH ListView ##########
@@ -522,8 +504,7 @@ class MainWindow(QMainWindow):
         """
         )
 
-        if hasattr(self.search_list_view.itemClicked, "connect"):
-            self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
+        self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
         search_layout.addWidget(self.search_checkbox)
         search_layout.addWidget(search_input)
@@ -546,8 +527,7 @@ class MainWindow(QMainWindow):
         self.tab_view.setTabsClosable(True)
         self.tab_view.setMovable(True)
         self.tab_view.setDocumentMode(True)
-        if hasattr(self.tab_view.tabCloseRequested, "connect"):
-            self.tab_view.tabCloseRequested.connect(self.close_tab)
+        self.tab_view.tabCloseRequested.connect(self.close_tab)
 
         ##############################
         ###### SETUP WIDGETS ##########
@@ -796,22 +776,18 @@ class MainWindow(QMainWindow):
         self.settings.setValue("main_window_width", self.size().width())
         self.settings.setValue("main_window_height", self.size().height())
 
-    def closeEvent(self, event: QCloseEvent):
-        if not self.force_close:
-            for i in range(self.tab_view.count()):
-                if str(self.tab_view.tabText(i)).startswith("*"):
-                    ret = question_box(
-                        self,
-                        "Changed File Alert!",
-                        "Close Application and Ignore Changes?",
-                        buttons=QMessageBox.Yes | QMessageBox.No,
-                        font=self.window_font,
-                    )
-                    if ret == QMessageBox.Yes:
-                        event.accept()
-                    else:
-                        event.ignore()
-                    return
-
-                    # self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
+    def closeEvent(self, event: QCloseEvent) -> None:
+        unsaved_tabs = [i for i in range(self.tab_view.count()) if self.tab_view.tabText(i).startswith("*")]
+        if unsaved_tabs and not self.force_close:
+            ret = question_box(
+                self,
+                "Unsaved Changes",
+                "Some files have unsaved changes. Do you really want to exit?",
+                buttons=QMessageBox.Yes | QMessageBox.No,
+                font=self.window_font,
+            )
+            if ret == QMessageBox.No:
+                event.ignore()
+                return
         event.accept()
+
