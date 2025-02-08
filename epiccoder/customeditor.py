@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
+import builtins
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -31,11 +31,16 @@ from PyQt5.Qsci import QsciAPIs
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QColor, QKeyEvent
+from PyQt5.QtWidgets import QApplication
 
 from epiccoder.lexer import PPSCustomLexer, TextCustomLexer
 
 
 class CustomEditor(QsciScintilla):
+    """
+    CustomEditor is a text editor widget built on QsciScintilla that supports syntax highlighting,
+    auto-completion, and change detection for a variety of file types.
+    """
     def __init__(
         self,
         parent=None,
@@ -44,8 +49,8 @@ class CustomEditor(QsciScintilla):
     ):
         super(CustomEditor, self).__init__(parent)
 
-        assert isinstance(file_path, Path)
-        assert isinstance(star_func, Callable)
+        assert isinstance(file_path, Path), ValueError("file_path must be provided and be a pathlib.Path object")
+        assert isinstance(star_func, Callable), ValueError("star_func must be provided and be a callable")
 
         self.file_path = file_path
         self.star_func = star_func
@@ -54,8 +59,7 @@ class CustomEditor(QsciScintilla):
         # encoding
         self.setUtf8(True)
         # Font
-        self.window_font = QFont("Fira Code")
-        self.window_font.setPointSize(12)
+        self.window_font = QApplication.instance().font()
         self.setFont(self.window_font)
 
         # brace matching
@@ -91,14 +95,6 @@ class CustomEditor(QsciScintilla):
         if self.file_path.suffix == ".py":
             self.pylexer = QsciLexerPython(self)
 
-            # Default Settings
-            self.pylexer.setDefaultColor(QColor(self.color1))
-            self.pylexer.setDefaultPaper(QColor(self.color2))
-            self.pylexer.setDefaultFont(QFont("Consolas", 14))
-
-            for i in range(50):
-                self.pylexer.setFont(QFont("Consolas", 14), i)
-
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerPython.Number)
             self.pylexer.setColor(QColor("#F18622"), QsciLexerPython.Keyword)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerPython.DoubleQuotedString)
@@ -113,14 +109,6 @@ class CustomEditor(QsciScintilla):
         elif self.file_path.suffix in (".h", ".c", ".cpp", ".hpp"):
             self.pylexer = QsciLexerCPP(self)
 
-            # Default Settings
-            self.pylexer.setDefaultColor(QColor(self.color1))
-            self.pylexer.setDefaultPaper(QColor(self.color2))
-            self.pylexer.setDefaultFont(QFont("Consolas", 14))
-
-            for i in range(50):
-                self.pylexer.setFont(QFont("Consolas", 14), i)
-
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerCPP.Number)
             self.pylexer.setColor(QColor("#F18622"), QsciLexerCPP.Keyword)
             self.pylexer.setColor(QColor("#91C71E"), QsciLexerCPP.DoubleQuotedString)
@@ -132,14 +120,16 @@ class CustomEditor(QsciScintilla):
 
         elif self.file_path.suffix == ".prs":
             self.pylexer = PPSCustomLexer(self)
+
         else:
             self.pylexer = TextCustomLexer(self)
 
-        self.pylexer.setDefaultFont(self.window_font)
+        self.configure_lexer(self.pylexer, self.window_font)
 
         # Api (you can add autocompletion using this)
         self.api = QsciAPIs(self.pylexer)
-        for key in keyword.kwlist + dir(__builtins__):  # adding builtin functions and keywords
+        # adding builtin functions and keywords
+        for key in keyword.kwlist + dir(builtins):
             self.api.add(key)
 
         for (
@@ -167,6 +157,13 @@ class CustomEditor(QsciScintilla):
         self.got_first_change_event = False
         self.textChanged.connect(self.onTextChanged)
 
+    def configure_lexer(self, lexer, font: QFont):
+        lexer.setDefaultColor(QColor(self.color1))
+        lexer.setDefaultPaper(QColor(self.color2))
+        lexer.setDefaultFont(font)
+        for i in range(50):
+            lexer.setFont(font, i)
+
     def keyPressEvent(self, e: QKeyEvent) -> None:
         if e.modifiers() == Qt.ControlModifier and e.key() == Qt.Key_Space:
             self.autoCompleteFromAll()
@@ -180,3 +177,4 @@ class CustomEditor(QsciScintilla):
         # Signal Next Event If Change Is Novel
         elif not self.changed:
             self.star_func(self.file_path)
+            self.changed = True

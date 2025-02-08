@@ -46,6 +46,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMenu,
     QAction,
+    QApplication,
 )
 
 from epiccoder.aboutwindow import AboutWin
@@ -119,8 +120,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(style_sheet)
 
         # setup font
-        self.window_font = QFont("Fira Code")
-        self.window_font.setPointSize(12)
+        self.window_font = QApplication.instance().font()
         self.setFont(self.window_font)
 
         self.set_up_menu()
@@ -260,6 +260,7 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         about = AboutWin(self)
+        about.setFont(QApplication.instance().font())
         about.show()
 
     def show_help(self): ...
@@ -638,6 +639,7 @@ class MainWindow(QMainWindow):
     @staticmethod
     def verify_duplicate_file_name(dupe_path: Path) -> Optional[Path]:
         dlg = DuplicateFileNameWin(dupe_path)
+        dlg.setFont(QApplication.instance().font())
         dlg.exec_()
         if dlg.result():
             return dlg.path_result

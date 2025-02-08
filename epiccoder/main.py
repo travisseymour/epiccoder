@@ -18,14 +18,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from typing import Literal
+
 from PyQt5.QtCore import QCoreApplication, QSize
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication
 
 from epiccoder.mainwindow import MainWindow
-from epiccoder.resource import get_resource
+
 import sys
 from pathlib import Path
+
+
+def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "monospace", size: int = 14) -> QFont:
+    """Returns a cross-platform QFont object with fallbacks."""
+    font_families = {
+        "sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "Sans-serif"],
+        "serif": ["Times New Roman", "Times", "Liberation Serif", "Serif"],
+        "monospace": ["Courier New", "Courier", "DejaVu Sans Mono", "Monospace"],
+    }
+
+    font = QFont()
+    for fam in font_families[family]:  # family is guaranteed to be a valid key
+        font.setFamily(fam)
+        if QFont(fam).exactMatch():  # Ensures the font exists on the system
+            break
+
+    font.setPointSize(size)
+    return font
 
 
 def main():
@@ -36,13 +56,9 @@ def main():
     app.setQuitOnLastWindowClosed(True)
     # appctxt.lastWindowClosed.conned(run_this_func_before_quit)
 
-    fonts = QFontDatabase()
-    fonts.addApplicationFont(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
-    fonts.addApplicationFont(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
-    fonts.addApplicationFont(get_resource("fonts", "Consolas", "CONSOLA.TTF"))
-    fonts.addApplicationFont(get_resource("fonts", "Consolas", "CONSOLAB.TTF"))
-    fonts.addApplicationFont(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
-    fonts.addApplicationFont(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
+    # Set the font for the application
+    default_font = get_default_font(family="monospace", size=14)
+    QApplication.instance().setFont(default_font)
 
     # init QSettings once so we can use default constructor throughout project
     QCoreApplication.setOrganizationName("TravisSeymour")

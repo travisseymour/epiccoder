@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QListWidgetItem, QApplication
 
 import os
 from pathlib import Path
@@ -36,6 +36,7 @@ class SearchItem(QListWidgetItem):
         self.end = end
         self.line = line
         self.formatted = f"{self.name}:{self.lineno}:{self.end} - {self.line} ..."
+        self.setFont(QApplication.instance().font())
         super().__init__(self.formatted)
 
     def __str__(self):

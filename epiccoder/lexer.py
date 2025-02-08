@@ -26,6 +26,7 @@ from typing import Optional
 
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtWidgets import QApplication
 
 
 # from PyQt5.QtGui import *
@@ -41,7 +42,7 @@ class PyCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(QColor(self.color1))
         self.setDefaultPaper(QColor(self.color2))
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QApplication.instance().font())
 
         # Keywords
         self.KEYWORD_LIST = keyword.kwlist
@@ -90,10 +91,13 @@ class PyCustomLexer(QsciLexerCustom):
         self.setPaper(QColor(self.color2), self.FUNCTION_DEF)
 
         # font
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.DEFAULT)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.KEYWORD)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.CLASSES)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.FUNCTION_DEF)
+        font: QFont = QApplication.instance().font()
+        font.setBold(True)
+        self.setFont(font)
+        self.setFont(font, self.DEFAULT)
+        self.setFont(font, self.KEYWORD)
+        self.setFont(font, self.CLASSES)
+        self.setFont(font, self.FUNCTION_DEF)
 
     def language(self) -> str:
         return "PYCustomLexer"
@@ -242,7 +246,7 @@ class TextCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(light_gray)
         self.setDefaultPaper(charcoal)
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QApplication.instance().font())
 
         self.DEFAULT = 0
         self.NUMBER = 1
@@ -327,7 +331,7 @@ class PPSCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(light_gray)
         self.setDefaultPaper(charcoal)
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QApplication.instance().font())
 
         # Keywords
 
@@ -446,8 +450,9 @@ class PPSCustomLexer(QsciLexerCustom):
         self.setPaper(self.default_bg_color, self.KEYWORD)
 
         # font
-        normal_font = QFont("Consolas", 14)
-        bold_font = QFont("Consolas", 14, weight=QFont.Bold)
+        normal_font: QFont = QApplication.instance().font()
+        bold_font: QFont = QApplication.instance().font()
+        bold_font.setBold(True)
         self.setFont(normal_font, self.DEFAULT)
         self.setFont(normal_font, self.PARENS)
         self.setFont(bold_font, self.RULE_SECTION)

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from typing import Optional
-from PyQt5.QtWidgets import QWidget, QMessageBox
+from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication
 from PyQt5.QtGui import QFont
 
 
@@ -48,6 +48,8 @@ def question_box(
 
     if font is not None:
         message_box.setFont(font)
+    else:
+        message_box.setFont(QApplication.instance().font())
 
     return message_box.exec_()
 
@@ -77,6 +79,8 @@ def critical_box(
 
     if font is not None:
         message_box.setFont(font)
+    else:
+        message_box.setFont(QApplication.instance().font())
 
     return message_box.exec_()
 
@@ -106,5 +110,7 @@ def warning_box(
 
     if font is not None:
         message_box.setFont(font)
+    else:
+        message_box.setFont(QApplication.instance().font())
 
     return message_box.exec_()

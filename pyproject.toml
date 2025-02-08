@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.1.14.1"
+version = "2025.2.8.2"
 description = "EPICcoder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
@@ -54,6 +54,7 @@ dev = [
 
 [project.scripts]
 epiccoder = "epiccoder.main:main"
+EPICcoder = "epiccoder.main:main"
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "tests.*", "info", "info.*", "build", "pyepicgui.egg-info"]
