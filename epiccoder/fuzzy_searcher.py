@@ -29,15 +29,26 @@ import re
 
 
 class SearchItem(QListWidgetItem):
-    def __init__(self, name, full_path, lineno, end, line):
+    def __init__(self, name: str, full_path: str, lineno: int, end: int, line: str) -> None:
+        """
+        Initializes a search result item.
+
+        :param name: Name of the file.
+        :param full_path: Full file path.
+        :param lineno: Line number where the match was found.
+        :param end: End position of the match in the line.
+        :param line: The matching part of the line (trimmed).
+        """
         self.name = name
         self.full_path = full_path
         self.lineno = lineno
         self.end = end
         self.line = line
         self.formatted = f"{self.name}:{self.lineno}:{self.end} - {self.line} ..."
-        self.setFont(QApplication.instance().font())
+
         super().__init__(self.formatted)
+
+        self.setFont(QApplication.instance().font())
 
     def __str__(self):
         return self.formatted
@@ -88,23 +99,30 @@ class SearchWorker(QThread):
             exclude_dirs.remove("venv")
         exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
+        try:
+            reg = re.compile(self.search_text, re.IGNORECASE)
+        except re.error as e:
+            if debug:
+                print(f"Regex error: {e}")
+            self.finished.emit([])  # or handle the error as appropriate
+            return
+
         for root, _, files in self.walkdir(self.search_path, exclude_dirs, exclude_files):
             # total search limit
             if len(self.items) > 5_000:
                 break
-            for file_ in files:
-                full_path = os.path.join(root, file_)
+            for filename in files:
+                full_path = os.path.join(root, filename)
                 if self.is_binary(full_path):
-                    break
+                    continue
 
                 try:
                     with open(full_path, "r", encoding="utf8") as f:
                         try:
-                            reg = re.compile(self.search_text, re.IGNORECASE)
                             for i, line in enumerate(f):
                                 if m := reg.search(line):
                                     fd = SearchItem(
-                                        file_,
+                                        filename,
                                         full_path,
                                         i,
                                         m.end(),
@@ -114,7 +132,7 @@ class SearchWorker(QThread):
                         except re.error as e:
                             if debug:
                                 print(e)
-                except UnicodeDecodeError as e:
+                except (UnicodeDecodeError, OSError) as e:
                     if debug:
                         print(e)
                     continue
