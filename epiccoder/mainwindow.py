@@ -25,7 +25,7 @@ from typing import Optional, List
 import sys
 from pathlib import Path
 
-from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex
+from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex, QEvent
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -47,6 +47,9 @@ from PyQt5.QtWidgets import (
     QMenu,
     QAction,
     QApplication,
+    QTabBar,
+    QProxyStyle,
+    QStyle,
 )
 
 from epiccoder.aboutwindow import AboutWin
@@ -67,6 +70,30 @@ def integer_generator(start=1, end=sys.maxsize):
 
 
 int_gen = integer_generator(0)  # Starts from 1 up to sys.maxsize
+
+
+class CustomTabBarStyle(QProxyStyle):
+    def pixelMetric(self, metric, option=None, widget=None):
+        if metric == QStyle.PM_TabBarScrollButtonWidth:
+            return 30
+        return super(CustomTabBarStyle, self).pixelMetric(metric, option, widget)
+
+
+class SmallTabBar(QTabBar):
+    def __init__(self, parent=None):
+        super(SmallTabBar, self).__init__(parent)
+        # Ensure the tabs are closable.
+        self.setTabsClosable(True)
+        # Set our custom style so that the scroll buttons are wider.
+        self.setStyle(CustomTabBarStyle())
+
+    def tabSizeHint(self, index):
+        size = super(SmallTabBar, self).tabSizeHint(index)
+        # Instead of halving the height completely, reduce it to (for example) 70% of the original
+        # to leave enough room for the close button.
+        new_height = int(size.height() * 0.7)
+        size.setHeight(new_height)
+        return size
 
 
 class MainWindow(QMainWindow):
@@ -128,6 +155,10 @@ class MainWindow(QMainWindow):
 
         self.last_h_split_sizes = [400, self.width() - 400]
         self.h_split.setSizes(self.last_h_split_sizes)
+
+        # Install event filter on the tab bar so we can update the status bar on hover.
+        self.tab_view.tabBar().installEventFilter(self)
+
         self.show()
 
     def set_up_menu(self):
@@ -139,7 +170,6 @@ class MainWindow(QMainWindow):
         file_menu.setFont(self.window_font)
 
         # Open File/Folder
-
         open_file: QAction = file_menu.addAction("Open File")
         open_file.setFont(self.window_font)
         open_file.setShortcut("Ctrl+O")
@@ -153,7 +183,6 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         # Save/SaveAs File
-
         save_file: QAction = file_menu.addAction("Save")
         save_file.setFont(self.window_font)
         save_file.setShortcut("Ctrl+S")
@@ -189,11 +218,9 @@ class MainWindow(QMainWindow):
             new_file_menu.addAction(obj)
 
         file_menu.addMenu(new_file_menu)
-
         file_menu.addSeparator()
 
         # Duplicate File
-
         self.dupe_file: QAction = file_menu.addAction("Duplicate")
         self.dupe_file.setShortcut("Ctrl+D")
         self.dupe_file.triggered.connect(self.duplicate_file)
@@ -202,7 +229,6 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         # Delete File
-
         self.delete_file: QAction = file_menu.addAction("Delete")
         self.delete_file.setShortcut("Ctrl+X")
         self.delete_file.triggered.connect(self.remove_file)
@@ -211,7 +237,6 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         # Quit Action
-
         quit_app: QAction = file_menu.addAction("Quit")
         quit_app.setShortcut("Ctrl+Q")
         quit_app.triggered.connect(self.close)
@@ -229,7 +254,6 @@ class MainWindow(QMainWindow):
         paste_action.triggered.connect(self.paste)
 
         # Help menu
-
         help_menu: QMenu = menu_bar.addMenu("Help")
         help_menu.setFont(self.window_font)
 
@@ -242,26 +266,30 @@ class MainWindow(QMainWindow):
         about.setFont(QApplication.instance().font())
         about.show()
 
-    def show_help(self): ...
+    def show_help(self):
+        pass
 
     def get_editor(self, file_path: Path) -> CustomEditor:
         # The CustomEditor is assumed to store the file path in an attribute called `file_path`
+        # and it already calls star_func (self.add_star) when its text changes.
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
     @staticmethod
     def is_binary(path):
-        """
-        Check if file is binary
-        """
+        """Check if file is binary"""
         with open(path, "rb") as f:
             return b"\0" in f.read(1024)
 
     def add_star(self, file_path: Path):
         # Add an asterisk (*) to the tab label to indicate unsaved changes.
+        # Compare the tab text (after stripping any asterisk) with the file name.
         for i in range(self.tab_view.count()):
-            if str(self.tab_view.tabText(i)).endswith(f"{Path(file_path.parent.name, file_path.name)}"):
-                self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
+            tab_text = self.tab_view.tabText(i)
+            clean_text = tab_text.lstrip("*")
+            if clean_text == file_path.name:
+                if not tab_text.startswith("*"):
+                    self.tab_view.setTabText(i, "*" + tab_text)
                 return
 
     def next_new_file_path(self, file_type: str, stem: str = "untitled") -> Path:
@@ -286,10 +314,14 @@ class MainWindow(QMainWindow):
 
         new_file_path = self.next_new_file_path(file_type) if is_new_file else path
         editor: CustomEditor = self.get_editor(new_file_path)
-        # The editor now holds its own file_path in editor.file_path
+        # Use only the file name for the tab text.
+        tab_label = new_file_path.name
+        # Set the full path as the tab's tooltip.
+        tab_tooltip = str(new_file_path)
 
         if is_new_file:
-            self.tab_view.addTab(editor, f"*{Path(new_file_path.parent.name, new_file_path.name)}")
+            self.tab_view.addTab(editor, f"*{tab_label}")
+            self.tab_view.setTabToolTip(self.tab_view.count() - 1, tab_tooltip)
             self.statusBar().showMessage(f"Opened '{new_file_path.name}'", 4000)
             self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
             return
@@ -298,14 +330,15 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("EPICcoder Cannot Open Binary Files!", 4000)
             return
 
-        # check if file already open
+        # Check if file is already open by comparing the full path stored in the tooltip.
         for i in range(self.tab_view.count()):
-            if str(self.tab_view.tabText(i)).endswith(f"{Path(new_file_path.parent.name, new_file_path.name)}"):
+            if self.tab_view.tabToolTip(i) == str(new_file_path):
                 self.tab_view.setCurrentIndex(i)
                 return
 
-        # create new tab
-        self.tab_view.addTab(editor, f"{Path(new_file_path.parent.name, new_file_path.name)}")
+        # Create new tab.
+        self.tab_view.addTab(editor, tab_label)
+        self.tab_view.setTabToolTip(self.tab_view.count() - 1, tab_tooltip)
         editor.setText(new_file_path.read_text())
         self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
         self.statusBar().showMessage(f"Opened {new_file_path.name}", 4000)
@@ -325,7 +358,6 @@ class MainWindow(QMainWindow):
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setFont(self.window_font)
         label.mousePressEvent = lambda e: self.show_hide_tab(e, name)
-        # Changing Cursor on hover
         label.enterEvent = self.set_cursor_pointer
         label.leaveEvent = self.set_cursor_arrow
         return label
@@ -371,17 +403,12 @@ class MainWindow(QMainWindow):
         self.side_bar = QFrame()
         self.side_bar.setFrameShape(QFrame.StyledPanel)
         self.side_bar.setFrameShadow(QFrame.Plain)
-        self.side_bar.setStyleSheet(
-            f"""
-            background-color: {self.side_bar_clr};
-            """
-        )
+        self.side_bar.setStyleSheet(f"background-color: {self.side_bar_clr};")
         side_bar_layout = QVBoxLayout()
         side_bar_layout.setContentsMargins(5, 10, 5, 0)
         side_bar_layout.setSpacing(0)
         side_bar_layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
-        # setup labels
         folder_label = self.get_side_bar_label(get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon")
         side_bar_layout.addWidget(folder_label)
 
@@ -390,27 +417,20 @@ class MainWindow(QMainWindow):
 
         self.side_bar.setLayout(side_bar_layout)
 
-        # split view
+        # Split view
         self.h_split = QSplitter(Qt.Horizontal)
 
         ##############################
         ###### FILE MANAGER ##########
-
-        # frame and layout to hold tree view (file manager)
         self.file_manager_frame = self.get_frame()
-
-        # self.file_manager_frame.setMaximumWidth(400)
-        # self.file_manager_frame.setMinimumWidth(200)
         self.file_manager_frame.setMaximumWidth(self.window().width())
         self.file_manager_frame.setMinimumWidth(200)
         tree_frame_layout = QVBoxLayout()
         tree_frame_layout.setContentsMargins(0, 0, 0, 0)
         tree_frame_layout.setSpacing(0)
 
-        # Create file system model to show in tree view
         self.model = QFileSystemModel()
         self.model.setRootPath(os.getcwd())
-        # File system filters
         self.model.setFilter(QDir.NoDotAndDotDot | QDir.AllDirs | QDir.Files)
 
         ##############################
@@ -422,16 +442,12 @@ class MainWindow(QMainWindow):
         self.tree_view.setSelectionMode(QTreeView.SingleSelection)
         self.tree_view.setSelectionBehavior(QTreeView.SelectRows)
         self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
-        # add custom context menu
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree_view.customContextMenuRequested.connect(self.tree_view_context_menu)
-        # handling click
-        # self.tree_view.clicked.connect(self.tree_view_clicked)
         self.tree_view.doubleClicked.connect(self.tree_view_clicked)
         self.tree_view.setIndentation(10)
         self.tree_view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
-        # Hide header and hide other columns except for name
-        self.tree_view.setHeaderHidden(True)  # hiding header
+        self.tree_view.setHeaderHidden(True)
         self.tree_view.setColumnHidden(1, True)
         self.tree_view.setColumnHidden(2, True)
         self.tree_view.setColumnHidden(3, True)
@@ -443,14 +459,14 @@ class MainWindow(QMainWindow):
         self.search_frame.setMinimumWidth(200)
 
         search_layout = QVBoxLayout()
-        search_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        search_layout.setAlignment(Qt.AlignTop)
         search_layout.setContentsMargins(0, 10, 0, 0)
         search_layout.setSpacing(0)
 
         search_input = QLineEdit()
         search_input.setPlaceholderText("Search")
         search_input.setFont(self.window_font)
-        search_input.setAlignment(Qt.AlignmentFlag.AlignTop)
+        search_input.setAlignment(Qt.AlignTop)
         search_input.setStyleSheet(
             """
             QLineEdit {
@@ -481,8 +497,6 @@ class MainWindow(QMainWindow):
             )
         )
 
-        ##############################
-        ###### SEARCH ListView ##########
         self.search_list_view = QListWidget()
         self.search_list_view.setFont(self.window_font)
         self.search_list_view.setStyleSheet(
@@ -496,44 +510,57 @@ class MainWindow(QMainWindow):
             }
             """
         )
-
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
         search_layout.addWidget(self.search_checkbox)
         search_layout.addWidget(search_input)
         search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
         search_layout.addWidget(self.search_list_view)
-
         self.search_frame.setLayout(search_layout)
 
-        # setup layout
         tree_frame_layout.addWidget(self.tree_view)
         self.file_manager_frame.setLayout(tree_frame_layout)
 
         ##############################
         ###### TAB VIEW ##########
-
-        # Tab Widget to add editor to
         self.tab_view = QTabWidget()
         self.tab_view.setFont(self.window_font)
         self.tab_view.setContentsMargins(0, 0, 0, 0)
         self.tab_view.setTabsClosable(True)
         self.tab_view.setMovable(True)
         self.tab_view.setDocumentMode(True)
+        self.tab_view.setTabBar(SmallTabBar())
         self.tab_view.tabCloseRequested.connect(self.close_tab)
+        self.tab_view.setStyleSheet(
+            """
+            /* Default appearance for all tabs */
+            QTabBar::tab {
+                background: #363a42;    /* background color for inactive tabs */
+                color: white;           /* text color for inactive tabs */
+                padding: 5px;
+                margin: 2px;
+            }
+            /* Appearance for the selected (foreground) tab */
+            QTabBar::tab:selected {
+                background: #ffdf00;    /* background color for the active tab */
+                color: black;        /* text color for the active tab */
+            }
+            /* Optionally, change the appearance when hovering over a tab */
+            QTabBar::tab:hover {
+                background: lightblue;
+                color: black;
+            }
+        """
+        )
 
         ##############################
         ###### SETUP WIDGETS ##########
-
-        # add tree view and tab view
         self.h_split.addWidget(self.file_manager_frame)
         self.h_split.addWidget(self.tab_view)
 
         body.addWidget(self.side_bar)
         body.addWidget(self.h_split)
-
         body_frame.setLayout(body)
-
         self.setCentralWidget(body_frame)
 
     def search_finished(self, items):
@@ -559,40 +586,31 @@ class MainWindow(QMainWindow):
                 )
                 if ret == QMessageBox.No:
                     return
-
         self.tab_view.removeTab(index)
-
         self.dupe_file.setEnabled(self.tab_view.count() > 0)
         self.delete_file.setEnabled(self.tab_view.count() > 0)
 
     def show_hide_tab(self, e, type_):
         if type_ == "folder-icon":
             if self.file_manager_frame not in self.h_split.children():
-                # restore file manager
                 self.h_split.replaceWidget(0, self.file_manager_frame)
-                # restore previous file manager width
-                w = self.h_split.width()
                 self.h_split.setSizes(self.last_h_split_sizes)
-
         elif type_ == "search-icon":
             if self.search_frame not in self.h_split.children():
-                # remember h_split before search
                 self.last_h_split_sizes = self.h_split.sizes()
-                # restore search interface
                 self.h_split.replaceWidget(0, self.search_frame)
                 self.search_frame.setMaximumWidth(self.window().width())
                 self.search_frame.setMinimumWidth(200)
-
         if self.current_side_bar == type_:
             frame = self.h_split.children()[0]
             if frame.isHidden():
                 frame.show()
             else:
                 frame.hide()
-
         self.current_side_bar = type_
 
-    def tree_view_context_menu(self, pos): ...
+    def tree_view_context_menu(self, pos):
+        pass
 
     def tree_view_clicked(self, index: QModelIndex):
         path = self.model.filePath(index)
@@ -620,11 +638,9 @@ class MainWindow(QMainWindow):
     def duplicate_file(self):
         if not self.tab_view.count():
             return
-
         editor = self.tab_view.currentWidget()
         if not hasattr(editor, "file_path"):
             return
-
         p = editor.file_path
         dupe_path = self.next_new_file_path(file_type=p.suffix, stem=p.stem)
         dupe_path = self.verify_duplicate_file_name(dupe_path)
@@ -636,13 +652,10 @@ class MainWindow(QMainWindow):
     def remove_file(self):
         if not self.tab_view.count() or self.tab_view.currentWidget() is None:
             return
-
         editor = self.tab_view.currentWidget()
         if not hasattr(editor, "file_path"):
             return
-
         p = editor.file_path
-
         ret = question_box(
             self,
             "File Deletion Warning!",
@@ -652,7 +665,6 @@ class MainWindow(QMainWindow):
         )
         if ret == QMessageBox.No:
             return
-
         try:
             p.unlink(missing_ok=True)
             self.close_tab(self.tab_view.currentIndex(), quiet=True)
@@ -664,17 +676,13 @@ class MainWindow(QMainWindow):
         if editor is None or not hasattr(editor, "file_path") or editor.file_path is None:
             self.save_as()
             return
-
         try:
             editor.file_path.write_text(editor.text())
         except Exception as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
-
         # Remove the asterisk from the tab label if present.
-        tab_text = self.tab_view.tabText(self.tab_view.currentIndex())
-        if tab_text.startswith("*"):
-            tab_text = tab_text.lstrip("*")
+        tab_text = self.tab_view.tabText(self.tab_view.currentIndex()).lstrip("*")
         self.tab_view.setTabText(self.tab_view.currentIndex(), tab_text)
         self.statusBar().showMessage(f"Saved {editor.file_path.name}", 4000)
 
@@ -682,13 +690,11 @@ class MainWindow(QMainWindow):
         editor = self.tab_view.currentWidget()
         if editor is None:
             return
-
         initial_name = str(editor.file_path) if editor.file_path else ""
         if editor.file_path and editor.file_path.suffix:
             initial_filter = f"*{editor.file_path.suffix.lower()}"
         else:
             initial_filter = ""
-
         file_path = QFileDialog.getSaveFileName(
             self,
             caption="Save As",
@@ -696,21 +702,19 @@ class MainWindow(QMainWindow):
             filter="All Files (*);;PRS Rule Files (*.prs);;Text Files (*.txt);;Python Files (*.py);;C++ Code Files (*.cpp);;C++ Header Files (*.h)",
             initialFilter=initial_filter,
         )[0]
-
         if file_path == "":
             self.statusBar().showMessage("Save-As Operation Cancelled", 4000)
             return
-
         new_path = Path(file_path)
         try:
             new_path.write_text(editor.text())
         except IOError as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
-
-        self.tab_view.setTabText(self.tab_view.currentIndex(), f"{Path(new_path.parent.name, new_path.name)}")
+        # Update the tab text to show only the file name and set its tooltip to the full path.
+        self.tab_view.setTabText(self.tab_view.currentIndex(), new_path.name)
+        self.tab_view.setTabToolTip(self.tab_view.currentIndex(), str(new_path))
         self.statusBar().showMessage(f"Saved {new_path.name}", 4000)
-        # Update the editor's file_path
         editor.file_path = new_path
 
     def open_file(self, file_path: Optional[Path] = None):
@@ -730,13 +734,11 @@ class MainWindow(QMainWindow):
                 self.statusBar().showMessage("Open-File Operation Cancelled", 4000)
                 return
             f = Path(new_file)
-
         self.set_new_tab(f)
 
     def open_folder(self):
         ops = QFileDialog.Options()
         ops |= QFileDialog.DontUseNativeDialog
-
         new_folder = QFileDialog.getExistingDirectory(self, "Pick A Folder", "", options=ops)
         if new_folder:
             self.model.setRootPath(new_folder)
@@ -777,3 +779,18 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         event.accept()
+
+    # Event filter to update the status bar when hovering over a tab.
+    def eventFilter(self, obj, event):
+        if obj == self.tab_view.tabBar():
+            if event.type() == QEvent.MouseMove:
+                pos = event.pos()
+                index = self.tab_view.tabBar().tabAt(pos)
+                if index != -1:
+                    # Use the tooltip (full path) as the status message.
+                    self.statusBar().showMessage(self.tab_view.tabToolTip(index))
+                else:
+                    self.statusBar().clearMessage()
+            elif event.type() == QEvent.Leave:
+                self.statusBar().clearMessage()
+        return super(MainWindow, self).eventFilter(obj, event)
