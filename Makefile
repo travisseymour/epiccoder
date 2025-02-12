@@ -2,7 +2,7 @@
 # Install the package with development dependencies
 # alternative to `pip install -r requirements`
 install:
-    pip install -U pip wheel
+	pip install -U pip wheel
 	pip install .[dev]
 	pip uninstall EPICcoder -y
 

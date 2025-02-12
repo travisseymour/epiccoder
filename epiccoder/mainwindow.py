@@ -56,7 +56,6 @@ from epiccoder.fuzzy_searcher import SearchWorker, SearchItem
 from epiccoder.questionbox import question_box, critical_box, warning_box
 from epiccoder.resource import get_resource
 
-
 from epiccoder.version import __version__
 
 
@@ -103,7 +102,6 @@ class MainWindow(QMainWindow):
 
         self.init_ui()
 
-        self.current_file = None
         self.current_side_bar = None
 
         self.setWindowIcon(QIcon(get_resource("uiicons", "app-icon.svg")))
@@ -239,10 +237,6 @@ class MainWindow(QMainWindow):
         about.setShortcut("Ctrl+A")
         about.triggered.connect(self.show_about)
 
-        # help = help_menu.addAction("Help")
-        # help.setShortcut("Ctrl+H")
-        # help.triggered.connect(self.show_help)
-
     def show_about(self):
         about = AboutWin(self)
         about.setFont(QApplication.instance().font())
@@ -250,7 +244,8 @@ class MainWindow(QMainWindow):
 
     def show_help(self): ...
 
-    def get_editor(self, file_path: Path) -> CustomEditor:  # QsciScintilla:
+    def get_editor(self, file_path: Path) -> CustomEditor:
+        # The CustomEditor is assumed to store the file path in an attribute called `file_path`
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
@@ -263,6 +258,7 @@ class MainWindow(QMainWindow):
             return b"\0" in f.read(1024)
 
     def add_star(self, file_path: Path):
+        # Add an asterisk (*) to the tab label to indicate unsaved changes.
         for i in range(self.tab_view.count()):
             if str(self.tab_view.tabText(i)).endswith(f"{Path(file_path.parent.name, file_path.name)}"):
                 self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
@@ -277,6 +273,10 @@ class MainWindow(QMainWindow):
         return Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
 
     def set_new_tab(self, path: Optional[Path], is_new_file=False, file_type: str = "txt"):
+        """
+        Open a new tab with an editor for the file given by `path`. If `is_new_file` is True,
+        a new file path is generated.
+        """
         if path:
             try:
                 if not path.is_file():
@@ -286,13 +286,12 @@ class MainWindow(QMainWindow):
 
         new_file_path = self.next_new_file_path(file_type) if is_new_file else path
         editor: CustomEditor = self.get_editor(new_file_path)
+        # The editor now holds its own file_path in editor.file_path
 
         if is_new_file:
             self.tab_view.addTab(editor, f"*{Path(new_file_path.parent.name, new_file_path.name)}")
-            # self.setWindowTitle(f"EPIC Coder v{__version__} | {str(new_file_path)}")
-            self.statusBar().showMessage(f"Opened '{new_file_path.name}", 4000)
+            self.statusBar().showMessage(f"Opened '{new_file_path.name}'", 4000)
             self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
-            self.current_file = None
             return
 
         if self.is_binary(path):
@@ -301,22 +300,18 @@ class MainWindow(QMainWindow):
 
         # check if file already open
         for i in range(self.tab_view.count()):
-            # print(f"{self.tab_view.widget(i).file_type=}")  # keep to remind me that I can access widget..need shortly
             if str(self.tab_view.tabText(i)).endswith(f"{Path(new_file_path.parent.name, new_file_path.name)}"):
                 self.tab_view.setCurrentIndex(i)
-                self.current_file = new_file_path
                 return
 
         # create new tab
         self.tab_view.addTab(editor, f"{Path(new_file_path.parent.name, new_file_path.name)}")
         editor.setText(new_file_path.read_text())
-        # self.setWindowTitle(f"EPIC Coder v{__version__} | {str(new_file_path)}")
-        self.current_file = new_file_path
         self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
         self.statusBar().showMessage(f"Opened {new_file_path.name}", 4000)
 
-        self.dupe_file.setEnabled(self.tab_view.count())
-        self.delete_file.setEnabled(self.tab_view.count())
+        self.dupe_file.setEnabled(self.tab_view.count() > 0)
+        self.delete_file.setEnabled(self.tab_view.count() > 0)
 
     def set_cursor_pointer(self, e):
         self.setCursor(Qt.PointingHandCursor)
@@ -353,7 +348,7 @@ class MainWindow(QMainWindow):
             QFrame:hover {
                 color: white;
             }
-        """
+            """
         )
         return frame
 
@@ -379,7 +374,7 @@ class MainWindow(QMainWindow):
         self.side_bar.setStyleSheet(
             f"""
             background-color: {self.side_bar_clr};
-        """
+            """
         )
         side_bar_layout = QVBoxLayout()
         side_bar_layout.setContentsMargins(5, 10, 5, 0)
@@ -458,21 +453,19 @@ class MainWindow(QMainWindow):
         search_input.setAlignment(Qt.AlignmentFlag.AlignTop)
         search_input.setStyleSheet(
             """
-        QLineEdit {
-            background-color: #21252b;
-            border-radius: 5px;
-            border: 1px solid #D3D3D3;
-            padding: 5px;
-            color: #D3D3D3;
-        }
-
-        QLineEdit:hover {
-            color: white;
+            QLineEdit {
+                background-color: #21252b;
+                border-radius: 5px;
+                border: 1px solid #D3D3D3;
+                padding: 5px;
+                color: #D3D3D3;
             }
-        """
+            QLineEdit:hover {
+                color: white;
+            }
+            """
         )
 
-        ############# CHECKBOX ################
         self.search_checkbox = QCheckBox("Search in modules")
         self.search_checkbox.setFont(self.window_font)
         self.search_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
@@ -494,14 +487,14 @@ class MainWindow(QMainWindow):
         self.search_list_view.setFont(self.window_font)
         self.search_list_view.setStyleSheet(
             """
-        QListWidget {
-            background-color: #21252b;
-            border-radius: 5px;
-            border: 1px solid #D3D3D3;
-            padding: 5px;
-            color: #D3D3D3;
-        }
-        """
+            QListWidget {
+                background-color: #21252b;
+                border-radius: 5px;
+                border: 1px solid #D3D3D3;
+                padding: 5px;
+                color: #D3D3D3;
+            }
+            """
         )
 
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
@@ -569,16 +562,14 @@ class MainWindow(QMainWindow):
 
         self.tab_view.removeTab(index)
 
-        self.dupe_file.setEnabled(self.tab_view.count())
-        self.delete_file.setEnabled(self.tab_view.count())
+        self.dupe_file.setEnabled(self.tab_view.count() > 0)
+        self.delete_file.setEnabled(self.tab_view.count() > 0)
 
     def show_hide_tab(self, e, type_):
         if type_ == "folder-icon":
             if self.file_manager_frame not in self.h_split.children():
                 # restore file manager
                 self.h_split.replaceWidget(0, self.file_manager_frame)
-                # self.file_manager_frame.setMaximumWidth(self.window().width())
-                # self.file_manager_frame.setMinimumWidth(200)
                 # restore previous file manager width
                 w = self.h_split.width()
                 self.h_split.setSizes(self.last_h_split_sizes)
@@ -630,23 +621,31 @@ class MainWindow(QMainWindow):
         if not self.tab_view.count():
             return
 
-        p = Path(self.current_file)
+        editor = self.tab_view.currentWidget()
+        if not hasattr(editor, "file_path"):
+            return
+
+        p = editor.file_path
         dupe_path = self.next_new_file_path(file_type=p.suffix, stem=p.stem)
         dupe_path = self.verify_duplicate_file_name(dupe_path)
         if dupe_path is None:
             return
-        _ = dupe_path.write_text(p.read_text())
+        dupe_path.write_text(p.read_text())
         self.set_new_tab(path=dupe_path, is_new_file=False, file_type=p.suffix)
 
     def remove_file(self):
         if not self.tab_view.count() or self.tab_view.currentWidget() is None:
             return
 
-        p = Path(self.current_file)
+        editor = self.tab_view.currentWidget()
+        if not hasattr(editor, "file_path"):
+            return
+
+        p = editor.file_path
 
         ret = question_box(
             self,
-            "FIle Deletion Warning!",
+            "File Deletion Warning!",
             f"Are You Sure You Want To Delete {str(p)}?\n\nThis operation cannot be undone!",
             buttons=QMessageBox.Yes | QMessageBox.No,
             font=self.window_font,
@@ -657,36 +656,36 @@ class MainWindow(QMainWindow):
         try:
             p.unlink(missing_ok=True)
             self.close_tab(self.tab_view.currentIndex(), quiet=True)
-            if self.tab_view.count():
-                self.current_file = self.tab_view.currentWidget().file_path
-            else:
-                self.current_file = None
         except Exception as e:
             critical_box(self, "File I/O Error!", f"Unable To Delete File {str(p)}: ({str(e)})", font=self.window_font)
 
     def save_file(self):
-        if self.current_file is None and self.tab_view.count() > 0:
+        editor = self.tab_view.currentWidget()
+        if editor is None or not hasattr(editor, "file_path") or editor.file_path is None:
             self.save_as()
+            return
 
-        editor: CustomEditor = self.tab_view.currentWidget()
+        try:
+            editor.file_path.write_text(editor.text())
+        except Exception as e:
+            self.statusBar().showMessage(f"Write Error: {e}", 4000)
+            return
 
-        self.current_file.write_text(editor.text())
-        # self.tab_view.setTabText(self.tab_view.currentIndex(), self.current_file.name)
-        self.tab_view.setTabText(
-            self.tab_view.currentIndex(),
-            f"{Path(self.current_file.parent.name, self.current_file.name)}",
-        )
-        self.statusBar().showMessage(f"Saved {self.current_file.name}", 4000)
+        # Remove the asterisk from the tab label if present.
+        tab_text = self.tab_view.tabText(self.tab_view.currentIndex())
+        if tab_text.startswith("*"):
+            tab_text = tab_text.lstrip("*")
+        self.tab_view.setTabText(self.tab_view.currentIndex(), tab_text)
+        self.statusBar().showMessage(f"Saved {editor.file_path.name}", 4000)
 
     def save_as(self):
-        # save as
         editor = self.tab_view.currentWidget()
         if editor is None:
             return
 
-        initial_name = str(self.tab_view.currentWidget().file_path)
-        if self.tab_view.currentWidget().file_path.suffix:
-            initial_filter = f"*{self.tab_view.currentWidget().file_path.suffix.lower()}"
+        initial_name = str(editor.file_path) if editor.file_path else ""
+        if editor.file_path and editor.file_path.suffix:
+            initial_filter = f"*{editor.file_path.suffix.lower()}"
         else:
             initial_filter = ""
 
@@ -694,9 +693,7 @@ class MainWindow(QMainWindow):
             self,
             caption="Save As",
             directory=initial_name,
-            filter="All Files (*);;PRS Rule Files (*.prs);;"
-            "Text Files (*.txt);;Python Files (*.py);;"
-            "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
+            filter="All Files (*);;PRS Rule Files (*.prs);;Text Files (*.txt);;Python Files (*.py);;C++ Code Files (*.cpp);;C++ Header Files (*.h)",
             initialFilter=initial_filter,
         )[0]
 
@@ -704,38 +701,29 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Save-As Operation Cancelled", 4000)
             return
 
-        path = Path(file_path)
+        new_path = Path(file_path)
         try:
-            if hasattr(editor, "text"):
-                path.write_text(editor.text())
-            else:
-                raise AttributeError("The editor {editor} does not have an attribute called `text`")
-
+            new_path.write_text(editor.text())
         except IOError as e:
-            self.statusBar().showMessage("Write Error: {e}", 4000)
+            self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
 
-        # self.tab_view.setTabText(self.tab_view.currentIndex(), path.name)
-        self.tab_view.setTabText(self.tab_view.currentIndex(), f"{Path(path.parent.name, path.name)}")
-
-        self.statusBar().showMessage(f"Saved {path.name}", 4000)
-        self.current_file = path
+        self.tab_view.setTabText(self.tab_view.currentIndex(), f"{Path(new_path.parent.name, new_path.name)}")
+        self.statusBar().showMessage(f"Saved {new_path.name}", 4000)
+        # Update the editor's file_path
+        editor.file_path = new_path
 
     def open_file(self, file_path: Optional[Path] = None):
-        if isinstance(file_path, Path) and Path(file_path).is_file():
+        if isinstance(file_path, Path) and file_path.is_file():
             f = file_path
         else:
-            # open file
-            ops = QFileDialog.Options()  # this is optional
+            ops = QFileDialog.Options()
             ops |= QFileDialog.DontUseNativeDialog
-            # TODO: add support for opening multiple files later. for now it can only open one at a time
             new_file, _ = QFileDialog.getOpenFileName(
                 self,
                 caption="Pick A File",
                 directory=str(self.model.rootDirectory().absolutePath()),
-                filter="All Files (*);;PRS Rule Files (*.prs);;"
-                "Text Files (*.txt);;Python Files (*.py);;"
-                "C++ Code Files (*.cpp);;C++ Header Files (*.h)",
+                filter="All Files (*);;PRS Rule Files (*.prs);;Text Files (*.txt);;Python Files (*.py);;C++ Code Files (*.cpp);;C++ Header Files (*.h)",
                 options=ops,
             )
             if new_file == "":
@@ -746,8 +734,7 @@ class MainWindow(QMainWindow):
         self.set_new_tab(f)
 
     def open_folder(self):
-        # open folder
-        ops = QFileDialog.Options()  # this is optional
+        ops = QFileDialog.Options()
         ops |= QFileDialog.DontUseNativeDialog
 
         new_folder = QFileDialog.getExistingDirectory(self, "Pick A Folder", "", options=ops)

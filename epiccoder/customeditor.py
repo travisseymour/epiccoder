@@ -56,7 +56,6 @@ class CustomEditor(QsciScintilla):
 
         self.file_path = file_path
         self.star_func = star_func
-        self.changed = False
 
         # encoding
         self.setUtf8(True)
@@ -177,6 +176,5 @@ class CustomEditor(QsciScintilla):
         if not self.got_first_change_event:
             self.got_first_change_event = True
         # Signal Next Event If Change Is Novel
-        elif not self.changed:
+        else:
             self.star_func(self.file_path)
-            self.changed = True
