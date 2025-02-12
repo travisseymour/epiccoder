@@ -75,7 +75,7 @@ class SearchWorker(QThread):
         try:
             with open(path, "rb") as f:
                 return b"\0" in f.read(1024)
-        except FileNotFoundError:
+        except:
             return False
 
     @staticmethod
