@@ -4,7 +4,7 @@ for f in *.ui
 		if [ -f "$f" ]
 		then 
 			pyuic5 -x "$f" -o "${f%.ui}.py"
-			cp "${f%.ui}.py" ../src/main/python/
+			cp "${f%.ui}.py" ..
 		fi
 	done
 # cp *.py ../src/main/python/gui/

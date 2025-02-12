@@ -1,5 +1,5 @@
 """
-EPICcoder is a minimal programmer's text editor created for use with the
+EPIC Coder is a minimal programmer's text editor created for use with the
 EPIC, EPICpy and pyEPIC simulation environments.
 
 Copyright (C) 2022-2025 Travis L. Seymour, PhD
