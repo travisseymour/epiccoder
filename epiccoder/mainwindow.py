@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(QMainWindow, self).__init__()
 
+        self.set_new_tab_busy = None
         self.force_close: bool = False
 
         # add before init
@@ -301,50 +302,62 @@ class MainWindow(QMainWindow):
         return Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
 
     def set_new_tab(self, path: Optional[Path], is_new_file=False, file_type: str = "txt"):
-        """
-        Open a new tab with an editor for the file given by `path`. If `is_new_file` is True,
-        a new file path is generated.
-        """
-        if path:
-            try:
-                if not path.is_file():
+        if self.set_new_tab_busy:
+            return
+
+        try:
+            self.set_new_tab_busy = True
+
+            if path:
+                try:
+                    if not path.is_file():
+                        return
+                except AttributeError:
                     return
-            except AttributeError:
+
+            # Normalize the path
+            norm_path = path.resolve() if path and not is_new_file else path
+            new_file_path = self.next_new_file_path(file_type) if is_new_file else norm_path
+
+            # Check if file is already open by comparing the normalized path.
+            for i in range(self.tab_view.count()):
+                if self.tab_view.tabToolTip(i) == str(new_file_path):
+                    self.tab_view.setCurrentIndex(i)
+                    return
+
+            # Create new tab.
+            editor: CustomEditor = self.get_editor(new_file_path)
+            tab_label = new_file_path.name
+            tab_tooltip = str(new_file_path)
+
+            if is_new_file:
+                self.tab_view.addTab(editor, f"*{tab_label}")
+                self.tab_view.setTabToolTip(self.tab_view.count() - 1, tab_tooltip)
+                self.statusBar().showMessage(f"Opened '{new_file_path.name}'", 4000)
+                self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
                 return
 
-        new_file_path = self.next_new_file_path(file_type) if is_new_file else path
-        editor: CustomEditor = self.get_editor(new_file_path)
-        # Use only the file name for the tab text.
-        tab_label = new_file_path.name
-        # Set the full path as the tab's tooltip.
-        tab_tooltip = str(new_file_path)
+            if self.is_binary(path):
+                self.statusBar().showMessage("EPICcoder Cannot Open Binary Files!", 4000)
+                return
 
-        if is_new_file:
-            self.tab_view.addTab(editor, f"*{tab_label}")
+            self.tab_view.addTab(editor, tab_label)
             self.tab_view.setTabToolTip(self.tab_view.count() - 1, tab_tooltip)
-            self.statusBar().showMessage(f"Opened '{new_file_path.name}'", 4000)
-            self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
-            return
-
-        if self.is_binary(path):
-            self.statusBar().showMessage("EPICcoder Cannot Open Binary Files!", 4000)
-            return
-
-        # Check if file is already open by comparing the full path stored in the tooltip.
-        for i in range(self.tab_view.count()):
-            if self.tab_view.tabToolTip(i) == str(new_file_path):
-                self.tab_view.setCurrentIndex(i)
+            try:
+                editor.setText(new_file_path.read_text())
+            except Exception as e:
+                warning_box(
+                    self, "Error Reading File", f"Could not read {str(new_file_path)}:\n{str(e)}", font=self.window_font
+                )
                 return
 
-        # Create new tab.
-        self.tab_view.addTab(editor, tab_label)
-        self.tab_view.setTabToolTip(self.tab_view.count() - 1, tab_tooltip)
-        editor.setText(new_file_path.read_text())
-        self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
-        self.statusBar().showMessage(f"Opened {new_file_path.name}", 4000)
+            self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
+            self.statusBar().showMessage(f"Opened {new_file_path.name}", 4000)
 
-        self.dupe_file.setEnabled(self.tab_view.count() > 0)
-        self.delete_file.setEnabled(self.tab_view.count() > 0)
+            self.dupe_file.setEnabled(self.tab_view.count() > 0)
+            self.delete_file.setEnabled(self.tab_view.count() > 0)
+        finally:
+            self.set_new_tab_busy = False
 
     def set_cursor_pointer(self, e):
         self.setCursor(Qt.PointingHandCursor)
