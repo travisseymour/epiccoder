@@ -134,8 +134,10 @@ class MainWindow(QMainWindow):
 
         self.setWindowIcon(QIcon(get_resource("uiicons", "app-icon.svg")))
 
+        self.setMinimumWidth(500)
+
     def init_ui(self):
-        self.setWindowTitle(f"EPIC Coder v{__version__}")
+        self.setWindowTitle(f"EPIC Coder v{__version__} | Travis L. Seymour PhD")
         self.resize(self.main_window_width, self.main_window_height)
 
         style_sheet = Path(get_resource("css/style.qss")).read_text()
@@ -338,7 +340,7 @@ class MainWindow(QMainWindow):
                 return
 
             if self.is_binary(path):
-                self.statusBar().showMessage("EPICcoder Cannot Open Binary Files!", 4000)
+                self.statusBar().showMessage("EPIC Coder Cannot Open Binary Files!", 4000)
                 return
 
             self.tab_view.addTab(editor, tab_label)
@@ -757,12 +759,17 @@ class MainWindow(QMainWindow):
             self.model.setRootPath(new_folder)
             self.tree_view.setRootIndex(self.model.index(new_folder))
             self.statusBar().showMessage(f"Opened {new_folder}", 4000)
+            # Update the window title to include the new folder path.
+            self.setWindowTitle(f"EPIC Coder v{__version__} - {new_folder}")
 
     def set_folder(self, folder: Path):
         if folder.is_dir():
-            self.model.setRootPath(str(folder))
-            self.tree_view.setRootIndex(self.model.index(str(folder)))
-            self.statusBar().showMessage(f"Opened in {str(folder)}", 4000)
+            folder_str = str(folder)
+            self.model.setRootPath(folder_str)
+            self.tree_view.setRootIndex(self.model.index(folder_str))
+            self.statusBar().showMessage(f"Opened in {folder_str}", 4000)
+            # Update the window title to include the folder path.
+            self.setWindowTitle(f"EPIC Coder v{__version__} - {folder_str}")
 
     def copy(self):
         editor = self.tab_view.currentWidget()
