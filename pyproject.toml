@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.2.13.2"
+version = "2025.2.13.3"
 description = "EPIC Coder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
@@ -34,12 +34,9 @@ classifiers = [
 ]
 
 dependencies = [
-    # Ensure 5.15.11 on newer Macs
-    # Ensure 5.15.10 on loder Macs
-    # Ensure 5.15.11 on Windows & Linux
-    'PyQt5==5.15.10; sys_platform == "darwin" and platform_version < "12.0.0"',
-    'PyQt5==5.15.11; sys_platform == "darwin" and platform_version >= "12.0.0"',
-    'PyQt5==5.15.11; sys_platform != "darwin"',
+    # Macs prior to Monteray need 5.15.10
+    # Everything else is fine with 5.15.11
+    "PyQt5==5.15.10",
     "QScintilla==2.14.1",
     "tomli>=2.2.1",
 ]
