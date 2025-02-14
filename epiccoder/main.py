@@ -29,6 +29,8 @@ from epiccoder.mainwindow import MainWindow
 import sys
 from pathlib import Path
 
+from epiccoder.splashscreen import SplashScreen
+
 
 def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "monospace", size: int = 14) -> QFont:
     """Returns a cross-platform QFont object with fallbacks."""
@@ -60,6 +62,10 @@ def get_start_path() -> Path:
 def main():
     # Create the application instance
     app = QApplication(sys.argv)
+
+    # Create splash screen that will close itself when main window appears
+    splash = SplashScreen()
+    splash.show()
 
     # dictate app final close behavior
     app.setQuitOnLastWindowClosed(True)

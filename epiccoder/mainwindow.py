@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex, QEvent
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent, QShowEvent
 from PyQt5.QtWidgets import (
     QMainWindow,
     QLabel,
@@ -52,6 +52,7 @@ from PyQt5.QtWidgets import (
     QStyle,
 )
 
+from epiccoder import config
 from epiccoder.aboutwindow import AboutWin
 from epiccoder.customeditor import CustomEditor
 from epiccoder.duplicatedlg import DuplicateFileNameWin
@@ -271,6 +272,10 @@ class MainWindow(QMainWindow):
 
     def show_help(self):
         pass
+
+    def showEvent(self, event: QShowEvent) -> None:
+        config.set_ready(True)
+        QMainWindow.showEvent(self, event)
 
     def get_editor(self, file_path: Path) -> CustomEditor:
         # The CustomEditor is assumed to store the file path in an attribute called `file_path`
