@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.2.13.1"
+version = "2025.2.13.2"
 description = "EPIC Coder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
@@ -32,11 +32,18 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent"
 ]
+
 dependencies = [
-    "PyQt5>=5.15.10,<=5.15.11", # older macs require 5.15.10
-    "QScintilla==2.14.1",  # 2.13.3 (failed on 3.9 + Sonoma)
+    # Ensure 5.15.11 on newer Macs
+    # Ensure 5.15.10 on loder Macs
+    # Ensure 5.15.11 on Windows & Linux
+    'PyQt5==5.15.10; sys_platform == "darwin" and platform_version < "12.0.0"',
+    'PyQt5==5.15.11; sys_platform == "darwin" and platform_version >= "12.0.0"',
+    'PyQt5==5.15.11; sys_platform != "darwin"',
+    "QScintilla==2.14.1",
     "tomli>=2.2.1",
 ]
+
 
 [project.urls]
 "Bug Tracker" = "https://github.com/travisseymour/epiccoder/issues"
