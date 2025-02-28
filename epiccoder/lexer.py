@@ -46,24 +46,23 @@ class TextCustomLexer(QsciLexerCustom):
         self.NUMBER = 1
 
         # colors
-        bright_green = QColor("#a6e22b")
-        red = QColor("#f9245e")
-        teal = QColor("#c678dd")
-        brown = QColor("#736643")
-        light_brown = QColor("#b39e69")
-        purple = QColor("#ac7db8")
-        yellow = QColor("#e7db74")
-        orange = QColor("#fc9221")
-        hot_pink = QColor("#ff00cc")
-        light_blue = QColor("#6495ed")
+        # bright_green = QColor("#a6e22b")
+        # red = QColor("#f9245e")
+        # teal = QColor("#c678dd")
+        # brown = QColor("#736643")
+        # light_brown = QColor("#b39e69")
+        # yellow = QColor("#e7db74")
+        # orange = QColor("#fc9221")
+        # hot_pink = QColor("#ff00cc")
+        # light_blue = QColor("#6495ed")
 
         # styles
         self.setColor(QColor(self.default_text_color), self.DEFAULT)
-        self.setColor(purple, self.NUMBER)
+        self.setColor(QColor("#ac7db8"), self.NUMBER)  # purple
 
         # paper color
-        self.setPaper(self.default_bg_color, self.DEFAULT)
-        self.setPaper(self.default_bg_color, self.NUMBER)
+        # self.setPaper(self.default_bg_color, self.DEFAULT)
+        # self.setPaper(self.default_bg_color, self.NUMBER)
 
         self.token_pattern = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
 
@@ -293,8 +292,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
         text = editor.text()[start:end]
         token_list = [(s.lower(), i) if isinstance(s, str) else (s, i) for s, i in self.get_tokens(text)]
-        # from pathlib import Path
-        # Path('freaky_deekey.txt').write_text(str(token_list))
+
         string_flag = False
 
         if start > 0:
@@ -344,7 +342,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)
-                if tok.endswith("\n") or tok.startswith("\n"):
+                if tok[-1] in ('\n', '\r') or tok[0] in ('\n', '\r'):
                     string_flag = False
                 continue
 
@@ -368,7 +366,7 @@ class PPSCustomLexer(QsciLexerCustom):
             else:
                 peek = peek_tok()
 
-                if len(tok) > 2 and last_token and last_token[0] == "(" and peek and peek[0].startswith("\n"):
+                if len(tok) > 2 and last_token and last_token[0] == "(" and peek and peek[0][0] in ('\n', '\r'):
                     self.setStyling(tok_len, self.RULE_NAME)
                 elif tok == "?" and last_token and last_token[0] in ("?", " ", "("):
                     self.setStyling(tok_len, self.VARIABLE)

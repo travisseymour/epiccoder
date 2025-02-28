@@ -671,6 +671,7 @@ class MainWindow(QMainWindow):
             return
         p = editor.file_path
         dupe_path = self.next_new_file_path(file_type=p.suffix, stem=p.stem)
+        dupe_path = Path(p.parent, dupe_path.name)
         dupe_path = self.verify_duplicate_file_name(dupe_path)
         if dupe_path is None:
             return
