@@ -437,10 +437,16 @@ class MainWindow(QMainWindow):
         side_bar_layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
         folder_label = self.get_side_bar_label(get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon")
+        folder_label.setToolTip('View Folder Contents')
         side_bar_layout.addWidget(folder_label)
 
         search_label = self.get_side_bar_label(get_resource("uiicons", "search-icon.svg"), "search-icon")
+        search_label.setToolTip('Search All Files')
         side_bar_layout.addWidget(search_label)
+
+        search_local_label = self.get_side_bar_label(get_resource("uiicons", "search-local-icon.svg"), "search-local-icon")
+        search_local_label.setToolTip('Search Current File')
+        side_bar_layout.addWidget(search_local_label)
 
         self.side_bar.setLayout(side_bar_layout)
 
@@ -624,6 +630,12 @@ class MainWindow(QMainWindow):
                 self.h_split.replaceWidget(0, self.file_manager_frame)
                 self.h_split.setSizes(self.last_h_split_sizes)
         elif type_ == "search-icon":
+            if self.search_frame not in self.h_split.children():
+                self.last_h_split_sizes = self.h_split.sizes()
+                self.h_split.replaceWidget(0, self.search_frame)
+                self.search_frame.setMaximumWidth(self.window().width())
+                self.search_frame.setMinimumWidth(200)
+        elif type_ == "search-local-icon":
             if self.search_frame not in self.h_split.children():
                 self.last_h_split_sizes = self.h_split.sizes()
                 self.h_split.replaceWidget(0, self.search_frame)
