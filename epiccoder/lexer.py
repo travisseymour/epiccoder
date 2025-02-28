@@ -18,235 +18,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import builtins
-import keyword
 import re
-import types
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
+from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QApplication
 
-
-# from PyQt5.QtGui import *
-
-
-class PyCustomLexer(QsciLexerCustom):
-    def __init__(self, parent):
-        super(PyCustomLexer, self).__init__(parent)
-
-        self.color1 = "#ffffff"  # "#abb2bf"
-        self.color2 = "#282c34"
-
-        # Default Settings
-        self.setDefaultColor(QColor(self.color1))
-        self.setDefaultPaper(QColor(self.color2))
-        self.setDefaultFont(QApplication.instance().font())
-
-        # Keywords
-        self.KEYWORD_LIST = keyword.kwlist
-
-        self.builtin_functions_names = [
-            name for name, obj in vars(builtins).items() if isinstance(obj, types.BuiltinFunctionType)
-        ]
-
-        # color per style
-        self.DEFAULT = 0
-        self.KEYWORD = 1
-        self.TYPES = 2
-        self.STRING = 3
-        self.KEYARGS = 4
-        self.BRACKETS = 5
-        self.COMMENTS = 6
-        self.CONSTANTS = 7
-        self.FUNCTIONS = 8
-        self.CLASSES = 9
-        self.FUNCTION_DEF = 10
-
-        # styles
-        self.setColor(QColor(self.color1), self.DEFAULT)
-        self.setColor(QColor("#c678dd"), self.KEYWORD)  # (198 , 120 , 221)
-        self.setColor(QColor("#56b6c2"), self.TYPES)  # (86 , 182 , 194)
-        self.setColor(QColor("#98c379"), self.STRING)  # (152 , 195 , 121)
-        self.setColor(QColor("#c678dd"), self.KEYARGS)  # (198 , 120 , 221)
-        self.setColor(QColor("#c678dd"), self.BRACKETS)  # (198 , 120 , 221)
-        self.setColor(QColor("#777777"), self.COMMENTS)  # (119 , 119 , 119)
-        self.setColor(QColor("#d19a5e"), self.CONSTANTS)  # (209 , 154 , 94)
-        self.setColor(QColor("#61afd1"), self.FUNCTIONS)  # (97 , 175 , 209)
-        self.setColor(QColor("#C68F55"), self.CLASSES)  # (198 , 143 , 85)
-        self.setColor(QColor("#61afd1"), self.FUNCTION_DEF)  # (97 , 175 , 209)
-
-        # paper color
-        self.setPaper(QColor(self.color2), self.DEFAULT)
-        self.setPaper(QColor(self.color2), self.KEYWORD)
-        self.setPaper(QColor(self.color2), self.TYPES)
-        self.setPaper(QColor(self.color2), self.STRING)
-        self.setPaper(QColor(self.color2), self.KEYARGS)
-        self.setPaper(QColor(self.color2), self.BRACKETS)
-        self.setPaper(QColor(self.color2), self.COMMENTS)
-        self.setPaper(QColor(self.color2), self.CONSTANTS)
-        self.setPaper(QColor(self.color2), self.FUNCTIONS)
-        self.setPaper(QColor(self.color2), self.CLASSES)
-        self.setPaper(QColor(self.color2), self.FUNCTION_DEF)
-
-        # font
-        font: QFont = QApplication.instance().font()
-        font.setBold(True)
-        self.setFont(font)
-        self.setFont(font, self.DEFAULT)
-        self.setFont(font, self.KEYWORD)
-        self.setFont(font, self.CLASSES)
-        self.setFont(font, self.FUNCTION_DEF)
-
-        self.token_pattern = re.compile(r"[*]\/|\/[*]|\s+|\w+|\W")
-
-    def language(self) -> str:
-        return "PYCustomLexer"
-
-    def description(self, style: int) -> str:
-        if style == self.DEFAULT:
-            return "DEFAULT"
-        elif style == self.KEYWORD:
-            return "KEYWORD"
-        elif style == self.TYPES:
-            return "TYPES"
-        elif style == self.STRING:
-            return "STRING"
-        elif style == self.KEYARGS:
-            return "KEYARGS"
-        elif style == self.BRACKETS:
-            return "BRACKETS"
-        elif style == self.COMMENTS:
-            return "COMMENTS"
-        elif style == self.CONSTANTS:
-            return "CONSTANTS"
-        elif style == self.FUNCTIONS:
-            return "FUNCTIONS"
-        elif style == self.CLASSES:
-            return "CLASSES"
-        elif style == self.FUNCTION_DEF:
-            return "FUNCTION_DEF"
-        else:
-            return ""
-
-    def get_tokens(self, text: str) -> List[Tuple[str, int]]:
-        # 3. Tokenize the text
-        # ---------------------
-        p = self.token_pattern
-
-        # 'token_list' is a list of tuples: (token_name, token_len), ex: '(class, 5)'
-        return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
-
-    def styleText(self, start: int, end: int) -> None:
-        self.startStyling(start)
-        editor: QsciScintilla = self.parent()
-
-        text = editor.text()[start:end]
-        token_list = self.get_tokens(text)
-
-        string_flag = False
-
-        if start > 0:
-            previous_style_nr = editor.SendScintilla(editor.SCI_GETSTYLEAT, start - 1)
-            if previous_style_nr == self.STRING:
-                string_flag = False
-
-        def next_tok(skip: int = None):
-            if len(token_list) > 0:
-                if skip is not None and skip != 0:
-                    for _ in range(skip - 1):
-                        if len(token_list) > 0:
-                            token_list.pop(0)
-                return token_list.pop(0)
-            else:
-                return None
-
-        def peek_tok(n=0):
-            try:
-                return token_list[n]
-            except IndexError:
-                return [""]
-
-        def skip_space_peek(skip=None):
-            i = 0
-            tok = " "
-            if skip is not None:
-                i = skip
-            while tok[0].isspace():
-                tok = peek_tok(i)
-                i += 1
-            return tok, i
-
-        while True:
-            curr_token = next_tok()
-            if curr_token is None:
-                break
-            tok: str = curr_token[0]
-            tok_len: int = curr_token[1]
-
-            if string_flag:
-                self.setStyling(tok_len, self.STRING)
-                if tok == '"' or tok == "'":
-                    string_flag = False
-                continue
-
-            if tok == "class":
-                name, ni = skip_space_peek()
-                brace_or_colon, _ = skip_space_peek(ni)
-                if name[0].isidentifier() and brace_or_colon[0] in (":", "("):
-                    self.setStyling(tok_len, self.KEYWORD)
-                    _ = next_tok(ni)
-                    self.setStyling(name[1] + 1, self.CLASSES)
-                    continue
-                else:
-                    self.setStyling(tok_len, self.KEYWORD)
-                    continue
-            elif tok == "def":
-                name, ni = skip_space_peek()
-                if name[0].isidentifier():
-                    self.setStyling(tok_len, self.KEYWORD)
-                    _ = next_tok(ni)
-                    self.setStyling(name[1] + 1, self.FUNCTION_DEF)
-                    continue
-                else:
-                    self.setStyling(tok_len, self.KEYWORD)
-                    continue
-            elif tok in self.KEYWORD_LIST:
-                self.setStyling(tok_len, self.KEYWORD)
-            elif tok.isnumeric() or tok == "self":
-                self.setStyling(tok_len, self.CONSTANTS)
-            elif tok in ["(", ")", "{", "}", "[", "]"]:
-                self.setStyling(tok_len, self.BRACKETS)
-            elif tok == '"' or tok == "'":
-                self.setStyling(tok_len, self.STRING)
-                string_flag = True
-            elif tok in self.builtin_functions_names or tok in [
-                "+",
-                "-",
-                "*",
-                "/",
-                "%",
-                "=",
-                "<",
-                ">",
-            ]:
-                self.setStyling(tok_len, self.TYPES)
-            else:
-                self.setStyling(tok_len, self.DEFAULT)
+from epiccoder.darkmode import is_dark_mode
+from epiccoder.themes import theme
 
 
 class TextCustomLexer(QsciLexerCustom):
     def __init__(self, parent):
         super(TextCustomLexer, self).__init__(parent)
-        light_gray = QColor("#abb2bf")
-        charcoal = QColor("#282c34")
-        self.default_text_color = light_gray
-        self.default_bg_color = charcoal
+        theme_name = QSettings().value("theme", "Monokai")
+        self.default_text_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["foreground"])
+        self.default_bg_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["background"])
 
         # Default Settings
-        self.setDefaultColor(light_gray)
-        self.setDefaultPaper(charcoal)
+        self.setDefaultColor(self.default_text_color)
+        self.setDefaultPaper(self.default_bg_color)
         self.setDefaultFont(QApplication.instance().font())
 
         self.DEFAULT = 0
@@ -282,7 +75,7 @@ class TextCustomLexer(QsciLexerCustom):
         else:
             return ""
 
-    def get_tokens(self, text) -> list[str, int]:
+    def get_tokens(self, text) -> list[tuple[str, int]]:
         p = self.token_pattern
 
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
@@ -323,21 +116,21 @@ class PPSCustomLexer(QsciLexerCustom):
     def __init__(self, parent):
         super(PPSCustomLexer, self).__init__(parent)
 
-        light_gray = QColor("#abb2bf")
-        charcoal = QColor("#282c34")
-        self.default_text_color = light_gray
-        self.default_bg_color = charcoal
+        theme_name = QSettings().value("theme", "Monokai")
+        self.default_text_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["foreground"])
+        self.default_bg_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["background"])
 
         self.last_tok: Optional[str] = None
 
         # Default Settings
-        self.setDefaultColor(light_gray)
-        self.setDefaultPaper(charcoal)
+        self.setDefaultColor(self.default_text_color)
+        self.setDefaultPaper(self.default_bg_color)
         self.setDefaultFont(QApplication.instance().font())
 
         # Keywords
 
-        self.RULE_SECTIONS = "if", "then"
+        self.RULE_SECTIONS = ["if", "then"]
+
         self.COMPARISONS = [
             "not",
             "equal",
@@ -401,10 +194,10 @@ class PPSCustomLexer(QsciLexerCustom):
 
         self.RULE_SECTION = 1
         self.COMPARISON = 2
-        self.DIRECTIVE = 3  # rule binding directives
-        self.ARCHITECTURE = 4  # architecture names (wm and other)
+        self.DIRECTIVE = 3
+        self.ARCHITECTURE = 4
 
-        self.COMMENT = 5  # // based comments
+        self.COMMENT = 5
         self.NUMBER = 6
 
         self.RULE_NAME = 7
@@ -413,43 +206,30 @@ class PPSCustomLexer(QsciLexerCustom):
         self.KEYWORD = 9
         self.PARENS = 10
 
-        # colors
-        bright_green = QColor("#a6e22b")  # (166 , 226 , 43)
-        red = QColor("#f9245e")  # (249 , 36 , 94)
-        teal = QColor("#c678dd")  # (198 , 120 , 221)
-        brown = QColor("#736643")  # (115 , 102 , 67)
-        light_brown = QColor("#b39e69")  # (179 , 158 , 105)
-        purple = QColor("#ac7db8")  # (172 , 125 , 184)
-        yellow = QColor("#e7db74")  # (231 , 219 , 116)
-        orange = QColor("#fc9221")  # (252 , 146 , 33)
-        hot_pink = QColor("#ff00cc")  # (255 , 0 , 204)
-        light_blue = QColor("#6495ed")  # (100 , 149 , 237)
-
         # styles
         self.setColor(QColor(self.default_text_color), self.DEFAULT)
         self.setColor(QColor(self.default_text_color), self.PARENS)
-        self.setColor(yellow, self.RULE_SECTION)
-        self.setColor(bright_green, self.COMPARISON)
-        self.setColor(red, self.DIRECTIVE)
-        self.setColor(teal, self.ARCHITECTURE)
-        self.setColor(brown, self.COMMENT)
-        self.setColor(purple, self.NUMBER)
-        self.setColor(yellow, self.RULE_NAME)
-        self.setColor(orange, self.VARIABLE)
-        self.setColor(light_blue, self.KEYWORD)
+        if is_dark_mode():
+            self.setColor(QColor("#e7db74"), self.RULE_SECTION)  # Soft Gold
+            self.setColor(QColor("#a6e22b"), self.COMPARISON)  # Bright Lime Green
+            self.setColor(QColor("#f9245e"), self.DIRECTIVE)  # Vivid Pinkish-Red
+            self.setColor(QColor("#c678dd"), self.ARCHITECTURE)  # Soft Purple
+            self.setColor(QColor("#736643"), self.COMMENT)  # Muted Brownish-Olive
+            self.setColor(QColor("#ac7db8"), self.NUMBER)  # Dusty Lavender
+            self.setColor(QColor("#e7db74"), self.RULE_NAME)  # Soft Gold (Same as RULE_SECTION)
+            self.setColor(QColor("#ff00cc"), self.VARIABLE)  # Neon Pink
+            self.setColor(QColor("#6495ed"), self.KEYWORD)  # Cornflower Blue
 
-        # paper color
-        self.setPaper(self.default_bg_color, self.DEFAULT)
-        self.setPaper(self.default_bg_color, self.PARENS)
-        self.setPaper(self.default_bg_color, self.RULE_SECTION)
-        self.setPaper(self.default_bg_color, self.COMPARISON)
-        self.setPaper(self.default_bg_color, self.DIRECTIVE)
-        self.setPaper(self.default_bg_color, self.ARCHITECTURE)
-        self.setPaper(self.default_bg_color, self.COMMENT)
-        self.setPaper(self.default_bg_color, self.NUMBER)
-        self.setPaper(self.default_bg_color, self.RULE_NAME)
-        self.setPaper(self.default_bg_color, self.VARIABLE)
-        self.setPaper(self.default_bg_color, self.KEYWORD)
+        else:
+            self.setColor(QColor("#755f00"), self.RULE_SECTION)  # Darker Gold
+            self.setColor(QColor("#22863a"), self.COMPARISON)  # Dark Green
+            self.setColor(QColor("#d70040"), self.DIRECTIVE)  # Crimson Red
+            self.setColor(QColor("#b847e1"), self.ARCHITECTURE)  # Soft Purple
+            self.setColor(QColor("#8b7765"), self.COMMENT)  # Warm Brownish-Gray
+            self.setColor(QColor("#9842a0"), self.NUMBER)  # Vibrant Magenta
+            self.setColor(QColor("#755f00"), self.RULE_NAME)  # Darker Gold
+            self.setColor(QColor("#cc0077"), self.VARIABLE)  # Hot Pink
+            self.setColor(QColor("#005ab5"), self.KEYWORD)  # Deep Blue
 
         # font
         normal_font: QFont = QApplication.instance().font()

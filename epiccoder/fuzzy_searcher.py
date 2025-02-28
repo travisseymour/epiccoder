@@ -27,6 +27,8 @@ import os
 from pathlib import Path
 import re
 
+from epiccoder.fileutils import is_binary_file
+
 
 class SearchItem(QListWidgetItem):
     def __init__(self, name: str, full_path: str, lineno: int, end: int, line: str) -> None:
@@ -65,18 +67,7 @@ class SearchWorker(QThread):
         self.items = []
         self.search_path: Optional[str] = None
         self.search_text: Optional[str] = None
-        self.search_project: Optional[bool] = None
-
-    @staticmethod
-    def is_binary(path):
-        """
-        Check if file is binary
-        """
-        try:
-            with open(path, "rb") as f:
-                return b"\0" in f.read(1024)
-        except:
-            return False
+        self.search_git: Optional[bool] = None
 
     @staticmethod
     def walkdir(path, exclude_dirs: list, exclude_files: list):
@@ -94,9 +85,9 @@ class SearchWorker(QThread):
         debug = False
         self.items = []
         # you can add more
-        exclude_dirs = {".git", ".svn", ".hg", ".bzr", ".idea", "__pycache__", "venv"}
-        if self.search_project:
-            exclude_dirs.remove("venv")
+        exclude_dirs = {".git", ".svn", ".hg", ".bzr", "__pycache__"}
+        if self.search_git:
+            exclude_dirs.remove(".git")
         exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
         try:
@@ -112,8 +103,8 @@ class SearchWorker(QThread):
             if len(self.items) > 5_000:
                 break
             for filename in files:
-                full_path = os.path.join(root, filename)
-                if self.is_binary(full_path):
+                full_path = str(os.path.join(root, filename))
+                if is_binary_file(full_path):
                     continue
 
                 try:
@@ -145,5 +136,5 @@ class SearchWorker(QThread):
     def update(self, pattern, path, search_project):
         self.search_text = pattern
         self.search_path = path
-        self.search_project = search_project
+        self.search_git = search_project
         self.start()

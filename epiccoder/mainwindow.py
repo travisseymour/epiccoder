@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex, QEvent
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent, QShowEvent
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent, QShowEvent, QColor
 from PyQt5.QtWidgets import (
     QMainWindow,
     QLabel,
@@ -55,10 +55,13 @@ from PyQt5.QtWidgets import (
 from epiccoder import config
 from epiccoder.aboutwindow import AboutWin
 from epiccoder.customeditor import CustomEditor
+from epiccoder.darkmode import is_dark_mode
 from epiccoder.duplicatedlg import DuplicateFileNameWin
 from epiccoder.fuzzy_searcher import SearchWorker, SearchItem
 from epiccoder.questionbox import question_box, critical_box, warning_box
 from epiccoder.resource import get_resource
+from epiccoder.textutils import normalize_line_endings
+from epiccoder.themes import theme
 
 from epiccoder.version import __version__
 
@@ -104,8 +107,12 @@ class MainWindow(QMainWindow):
         self.set_new_tab_busy = None
         self.force_close: bool = False
 
+        theme_name = QSettings().value("theme", "Monokai")
+        self.default_text_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["foreground"])
+        self.default_bg_color = QColor(theme[theme_name]["dark" if is_dark_mode() else "light"]["background"])
+
         # add before init
-        self.side_bar_clr = "#282c34"
+        self.side_bar_clr = self.default_bg_color  # "#282c34"
 
         # init settings
         self.settings = QSettings()
@@ -120,7 +127,7 @@ class MainWindow(QMainWindow):
         self.model: Optional[QFileSystemModel] = None
         self.tree_view: Optional[QTreeView] = None
         self.search_frame: Optional[QFrame] = None
-        self.search_checkbox: Optional[QCheckBox] = None
+        self.search_git_checkbox: Optional[QCheckBox] = None
         self.search_worker: Optional[SearchWorker] = None
         self.search_list_view: Optional[QListWidget] = None
         self.tab_view: Optional[QTabWidget] = None
@@ -138,7 +145,7 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(500)
 
     def init_ui(self):
-        self.setWindowTitle(f"EPIC Coder v{__version__} | Travis L. Seymour PhD")
+        self.setWindowTitle(f"EPIC Coder v{__version__} | Travis L. Seymour, PhD.")
         self.resize(self.main_window_width, self.main_window_height)
 
         style_sheet = Path(get_resource("css/style.qss")).read_text()
@@ -502,9 +509,10 @@ class MainWindow(QMainWindow):
             """
         )
 
-        self.search_checkbox = QCheckBox("Search in modules")
-        self.search_checkbox.setFont(self.window_font)
-        self.search_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+        self.search_git_checkbox = QCheckBox("Include .git")
+        self.search_git_checkbox.setToolTip("If checked, will include .git folders in search.")
+        self.search_git_checkbox.setFont(self.window_font)
+        self.search_git_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
 
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
@@ -513,7 +521,7 @@ class MainWindow(QMainWindow):
             lambda text: self.search_worker.update(
                 text,
                 self.model.rootDirectory().absolutePath(),
-                self.search_checkbox.isChecked(),
+                self.search_git_checkbox.isChecked(),
             )
         )
 
@@ -532,7 +540,7 @@ class MainWindow(QMainWindow):
         )
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
-        search_layout.addWidget(self.search_checkbox)
+        search_layout.addWidget(self.search_git_checkbox)
         search_layout.addWidget(search_input)
         search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
         search_layout.addWidget(self.search_list_view)
@@ -666,7 +674,7 @@ class MainWindow(QMainWindow):
         dupe_path = self.verify_duplicate_file_name(dupe_path)
         if dupe_path is None:
             return
-        dupe_path.write_text(p.read_text())
+        dupe_path.write_text(normalize_line_endings(p.read_text(), editor.eolMode()))
         self.set_new_tab(path=dupe_path, is_new_file=False, file_type=p.suffix)
 
     def remove_file(self):
@@ -697,7 +705,7 @@ class MainWindow(QMainWindow):
             self.save_as()
             return
         try:
-            editor.file_path.write_text(editor.text())
+            editor.file_path.write_text(normalize_line_endings(editor.text(), editor.eolMode()))
         except Exception as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
@@ -727,7 +735,7 @@ class MainWindow(QMainWindow):
             return
         new_path = Path(file_path)
         try:
-            new_path.write_text(editor.text())
+            new_path.write_text(normalize_line_endings(editor.text(), editor.eolMode()))
         except IOError as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return

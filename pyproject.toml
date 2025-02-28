@@ -39,6 +39,7 @@ dependencies = [
     "PyQt5==5.15.10",
     "QScintilla==2.14.1",
     "tomli>=2.2.1",
+    "darkdetect==0.8.0",
 ]
 
 
