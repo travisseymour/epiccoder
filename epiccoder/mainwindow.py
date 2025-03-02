@@ -49,7 +49,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QTabBar,
     QProxyStyle,
-    QStyle,
+    QStyle, QPushButton,
 )
 
 from epiccoder import config
@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.search_hidden_checkbox: Optional[QCheckBox] = None
         self.search_ignore_case_checkbox: Optional[QCheckBox] = None
         self.search_type_button: Optional[ThreeStateButton] = None
+        self.search_button: Optional[QPushButton] = None
         self.search_worker: Optional[SearchWorker] = None
         self.search_list_view: Optional[QListWidget] = None
         self.tab_view: Optional[QTabWidget] = None
@@ -520,19 +521,18 @@ class MainWindow(QMainWindow):
         self.search_ignore_case_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
         self.search_ignore_case_checkbox.setChecked(True)
 
-        # def re_update_search_text():
-        #     search_input.setText(search_input.text())
-
         self.search_type_button = ThreeStateButton()
-        # self.search_type_button.button.clicked.connect(re_update_search_text)
 
+        self.search_button = QPushButton()
+        self.search_button.setIcon(QIcon(get_resource('images', 'search', 'search_glass.png')))
+        self.search_button.setFixedSize(30, 30)
 
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
 
-        search_input.textChanged.connect(
-            lambda text: self.search_worker.update(
-                pattern=text,
+        self.search_button.clicked.connect(
+            lambda x: self.search_worker.update(
+                pattern=search_label.text(),
                 path=self.model.rootDirectory().absolutePath(),
                 search_hidden=self.search_hidden_checkbox.isChecked,
                 ignore_case=self.search_ignore_case_checkbox.isChecked,
@@ -559,7 +559,13 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.search_hidden_checkbox)
         search_layout.addWidget(self.search_ignore_case_checkbox)
         search_layout.addWidget(self.search_type_button)
-        search_layout.addWidget(search_input)
+
+        si_layout = QHBoxLayout()
+        si_layout.addWidget(search_input)
+        si_layout.addWidget(self.search_button)
+        search_layout.addLayout(si_layout)
+
+        # search_layout.addWidget(search_input)
         search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
         search_layout.addWidget(self.search_list_view)
         self.search_frame.setLayout(search_layout)
@@ -610,9 +616,13 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(body_frame)
 
     def search_finished(self, items):
-        self.search_list_view.clear()
-        for i in items:
-            self.search_list_view.addItem(i)
+        self.search_button.setEnabled(False)
+        try:
+            self.search_list_view.clear()
+            for i in items:
+                self.search_list_view.addItem(i)
+        finally:
+            self.search_button.setEnabled(True)
 
     def search_list_view_clicked(self, item: SearchItem):
         self.set_new_tab(Path(item.full_path))

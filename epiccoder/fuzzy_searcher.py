@@ -18,13 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Optional, Callable, Sequence
+from typing import Optional, Callable
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QListWidgetItem, QApplication
 
 import os
-from pathlib import Path
 import re
 
 from epiccoder.fileutils import is_binary_file, group_files_by_folder, walkdir
@@ -79,10 +78,10 @@ class SearchWorker(QThread):
         debug = False
         self.items = []
         # you can add more     rm -rf build/ dist/ *.egg-info
-        # exclude_dirs = {".git", ".svn", ".hg", ".bzr", "__pycache__", "build", "dist"}
-        # if self.search_hidden:
-        #     exclude_dirs.remove(".git")
+        exclude_dirs = (".git", ".svn", ".hg", ".bzr", "__pycache__", "build", "dist")
         # exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
+
+        # TODO: add ability to toggle regex
 
         try:
             if self.ignore_case():
@@ -97,11 +96,14 @@ class SearchWorker(QThread):
 
         search_type = self.get_search_type().strip()
 
-
         if search_type == "Search All Files in Folder":
             import timeit
             start = timeit.default_timer()
-            search_set = walkdir(self.search_path, [], []) #exclude_dirs, exclude_files)
+            search_set = walkdir(
+                path=self.search_path,
+                include_hidden=self.ignore_case(),
+                exclude_dirs=exclude_dirs
+            )
             print(f'{timeit.default_timer()-start=}')
         else:
             files = self.get_search_files()
@@ -138,7 +140,6 @@ class SearchWorker(QThread):
                         print(e)
                     continue
 
-        print(f'{len(self.items)=} {self.items[:20]}')
         self.finished.emit(self.items)
 
     def run(self):
