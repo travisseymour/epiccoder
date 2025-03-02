@@ -57,11 +57,13 @@ from epiccoder.aboutwindow import AboutWin
 from epiccoder.customeditor import CustomEditor
 from epiccoder.darkmode import is_dark_mode
 from epiccoder.duplicatedlg import DuplicateFileNameWin
+from epiccoder.fileutils import is_binary_file
 from epiccoder.fuzzy_searcher import SearchWorker, SearchItem
 from epiccoder.questionbox import question_box, critical_box, warning_box
 from epiccoder.resource import get_resource
 from epiccoder.textutils import normalize_line_endings
 from epiccoder.themes import theme
+from epiccoder.threestatebutton import ThreeStateButton
 
 from epiccoder.version import __version__
 
@@ -127,7 +129,9 @@ class MainWindow(QMainWindow):
         self.model: Optional[QFileSystemModel] = None
         self.tree_view: Optional[QTreeView] = None
         self.search_frame: Optional[QFrame] = None
-        self.search_git_checkbox: Optional[QCheckBox] = None
+        self.search_hidden_checkbox: Optional[QCheckBox] = None
+        self.search_ignore_case_checkbox: Optional[QCheckBox] = None
+        self.search_type_button: Optional[ThreeStateButton] = None
         self.search_worker: Optional[SearchWorker] = None
         self.search_list_view: Optional[QListWidget] = None
         self.tab_view: Optional[QTabWidget] = None
@@ -290,12 +294,6 @@ class MainWindow(QMainWindow):
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
-    @staticmethod
-    def is_binary(path):
-        """Check if file is binary"""
-        with open(path, "rb") as f:
-            return b"\0" in f.read(1024)
-
     def add_star(self, file_path: Path):
         # Add an asterisk (*) to the tab label to indicate unsaved changes.
         # Compare the tab text (after stripping any asterisk) with the file name.
@@ -351,7 +349,7 @@ class MainWindow(QMainWindow):
                 self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
                 return
 
-            if self.is_binary(path):
+            if is_binary_file(path):
                 self.statusBar().showMessage("EPIC Coder Cannot Open Binary Files!", 4000)
                 return
 
@@ -441,12 +439,8 @@ class MainWindow(QMainWindow):
         side_bar_layout.addWidget(folder_label)
 
         search_label = self.get_side_bar_label(get_resource("uiicons", "search-icon.svg"), "search-icon")
-        search_label.setToolTip('Search All Files')
+        search_label.setToolTip('Search For Text')
         side_bar_layout.addWidget(search_label)
-
-        search_local_label = self.get_side_bar_label(get_resource("uiicons", "search-local-icon.svg"), "search-local-icon")
-        search_local_label.setToolTip('Search Current File')
-        side_bar_layout.addWidget(search_local_label)
 
         self.side_bar.setLayout(side_bar_layout)
 
@@ -515,19 +509,35 @@ class MainWindow(QMainWindow):
             """
         )
 
-        self.search_git_checkbox = QCheckBox("Include .git")
-        self.search_git_checkbox.setToolTip("If checked, will include .git folders in search.")
-        self.search_git_checkbox.setFont(self.window_font)
-        self.search_git_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+        self.search_hidden_checkbox = QCheckBox("Include Hidden")
+        self.search_hidden_checkbox.setToolTip("If checked, will include files and folders starting with a '.'")
+        self.search_hidden_checkbox.setFont(self.window_font)
+        self.search_hidden_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+
+        self.search_ignore_case_checkbox = QCheckBox("Ignore Case")
+        self.search_ignore_case_checkbox.setToolTip("If checked, will ignore case when searching text")
+        self.search_ignore_case_checkbox.setFont(self.window_font)
+        self.search_ignore_case_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+        self.search_ignore_case_checkbox.setChecked(True)
+
+        # def re_update_search_text():
+        #     search_input.setText(search_input.text())
+
+        self.search_type_button = ThreeStateButton()
+        # self.search_type_button.button.clicked.connect(re_update_search_text)
+
 
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
 
         search_input.textChanged.connect(
             lambda text: self.search_worker.update(
-                text,
-                self.model.rootDirectory().absolutePath(),
-                self.search_git_checkbox.isChecked(),
+                pattern=text,
+                path=self.model.rootDirectory().absolutePath(),
+                search_hidden=self.search_hidden_checkbox.isChecked,
+                ignore_case=self.search_ignore_case_checkbox.isChecked,
+                get_search_type=self.search_type_button.get_current_state_label,
+                get_search_files=self.get_search_files
             )
         )
 
@@ -546,7 +556,9 @@ class MainWindow(QMainWindow):
         )
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
-        search_layout.addWidget(self.search_git_checkbox)
+        search_layout.addWidget(self.search_hidden_checkbox)
+        search_layout.addWidget(self.search_ignore_case_checkbox)
+        search_layout.addWidget(self.search_type_button)
         search_layout.addWidget(search_input)
         search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
         search_layout.addWidget(self.search_list_view)
@@ -635,12 +647,6 @@ class MainWindow(QMainWindow):
                 self.h_split.replaceWidget(0, self.search_frame)
                 self.search_frame.setMaximumWidth(self.window().width())
                 self.search_frame.setMinimumWidth(200)
-        elif type_ == "search-local-icon":
-            if self.search_frame not in self.h_split.children():
-                self.last_h_split_sizes = self.h_split.sizes()
-                self.h_split.replaceWidget(0, self.search_frame)
-                self.search_frame.setMaximumWidth(self.window().width())
-                self.search_frame.setMinimumWidth(200)
         if self.current_side_bar == type_:
             frame = self.h_split.children()[0]
             if frame.isHidden():
@@ -689,6 +695,32 @@ class MainWindow(QMainWindow):
             return
         dupe_path.write_text(normalize_line_endings(p.read_text(), editor.eolMode()))
         self.set_new_tab(path=dupe_path, is_new_file=False, file_type=p.suffix)
+
+    def get_all_open_files(self) -> tuple[Path,...]:
+        """Returns a list of Paths for all open files."""
+        open_files = []
+        for i in range(self.tab_view.count()):
+            editor = self.tab_view.widget(i)  # Get the editor in tab i
+            if hasattr(editor, "file_path") and editor.file_path is not None:
+                open_files.append(editor.file_path)
+        return tuple(open_files)
+
+    def get_current_file(self) -> tuple[Path]:
+        """Returns the Path of the currently selected open file, or None if none is selected."""
+        editor = self.tab_view.currentWidget()
+        if hasattr(editor, "file_path") and editor.file_path is not None:
+            return (editor.file_path,)
+        return tuple()
+
+    def get_search_files(self)->tuple[Path, ...]:
+        search_type = self.search_type_button.get_current_state_label().strip()
+
+        if search_type == "Search Current File Only":
+            return self.get_current_file()
+        elif search_type == "Search All Open Files":
+            return self.get_all_open_files()
+        else:
+            return ()
 
     def remove_file(self):
         if not self.tab_view.count() or self.tab_view.currentWidget() is None:

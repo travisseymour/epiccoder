@@ -18,10 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Literal
 
 from PyQt5.QtCore import QCoreApplication, QSize
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication
 
 from epiccoder.mainwindow import MainWindow
@@ -30,24 +28,7 @@ import sys
 from pathlib import Path
 
 from epiccoder.splashscreen import SplashScreen
-
-
-def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "monospace", size: int = 14) -> QFont:
-    """Returns a cross-platform QFont object with fallbacks."""
-    font_families = {
-        "sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "Sans-serif"],
-        "serif": ["Times New Roman", "Times", "Liberation Serif", "Serif"],
-        "monospace": ["Courier New", "Courier", "DejaVu Sans Mono", "Monospace"],
-    }
-
-    font = QFont()
-    for fam in font_families[family]:  # family is guaranteed to be a valid key
-        font.setFamily(fam)
-        if QFont(fam).exactMatch():  # Ensures the font exists on the system
-            break
-
-    font.setPointSize(size)
-    return font
+from epiccoder.themes import get_default_font
 
 
 def get_start_path() -> Path:

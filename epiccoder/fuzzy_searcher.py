@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Optional
+from typing import Optional, Callable, Sequence
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QListWidgetItem, QApplication
@@ -27,7 +27,7 @@ import os
 from pathlib import Path
 import re
 
-from epiccoder.fileutils import is_binary_file
+from epiccoder.fileutils import is_binary_file, group_files_by_folder, walkdir
 
 
 class SearchItem(QListWidgetItem):
@@ -50,7 +50,10 @@ class SearchItem(QListWidgetItem):
 
         super().__init__(self.formatted)
 
-        self.setFont(QApplication.instance().font())
+        try:
+            self.setFont(QApplication.instance().font())
+        except AttributeError:
+            ...
 
     def __str__(self):
         return self.formatted
@@ -67,38 +70,45 @@ class SearchWorker(QThread):
         self.items = []
         self.search_path: Optional[str] = None
         self.search_text: Optional[str] = None
-        self.search_git: Optional[bool] = None
-
-    @staticmethod
-    def walkdir(path, exclude_dirs: list, exclude_files: list):
-        for (
-            root,
-            dirs,
-            files,
-        ) in os.walk(path, topdown=True):
-            # filtering
-            dirs[:] = [d for d in dirs if d not in exclude_dirs]
-            files[:] = [f for f in files if Path(f).suffix not in exclude_files]
-            yield root, dirs, files
+        self.search_hidden: Optional[Callable] = None
+        self.get_search_type: Optional[Callable] = None
+        self.get_search_files: Optional[Callable] = None
+        self.ignore_case: Optional[Callable] = None
 
     def search(self):
         debug = False
         self.items = []
-        # you can add more
-        exclude_dirs = {".git", ".svn", ".hg", ".bzr", "__pycache__"}
-        if self.search_git:
-            exclude_dirs.remove(".git")
-        exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
+        # you can add more     rm -rf build/ dist/ *.egg-info
+        # exclude_dirs = {".git", ".svn", ".hg", ".bzr", "__pycache__", "build", "dist"}
+        # if self.search_hidden:
+        #     exclude_dirs.remove(".git")
+        # exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
         try:
-            reg = re.compile(self.search_text, re.IGNORECASE)
+            if self.ignore_case():
+                reg = re.compile(self.search_text, re.IGNORECASE)
+            else:
+                reg = re.compile(self.search_text)
         except re.error as e:
             if debug:
                 print(f"Regex error: {e}")
             self.finished.emit([])  # or handle the error as appropriate
             return
 
-        for root, _, files in self.walkdir(self.search_path, exclude_dirs, exclude_files):
+        search_type = self.get_search_type().strip()
+
+
+        if search_type == "Search All Files in Folder":
+            import timeit
+            start = timeit.default_timer()
+            search_set = walkdir(self.search_path, [], []) #exclude_dirs, exclude_files)
+            print(f'{timeit.default_timer()-start=}')
+        else:
+            files = self.get_search_files()
+            files_grouped_by_folder = group_files_by_folder(files)
+            search_set = ((str(folder.resolve()), None, file_list) for folder, file_list in files_grouped_by_folder)
+
+        for root, _, files in search_set:
             # total search limit
             if len(self.items) > 5_000:
                 break
@@ -128,13 +138,17 @@ class SearchWorker(QThread):
                         print(e)
                     continue
 
+        print(f'{len(self.items)=} {self.items[:20]}')
         self.finished.emit(self.items)
 
     def run(self):
         self.search()
 
-    def update(self, pattern, path, search_project):
+    def update(self, pattern, path, search_hidden, ignore_case, get_search_type: Callable, get_search_files: Callable):
         self.search_text = pattern
         self.search_path = path
-        self.search_git = search_project
+        self.search_hidden = search_hidden
+        self.ignore_case = ignore_case
+        self.get_search_type = get_search_type
+        self.get_search_files = get_search_files
         self.start()
