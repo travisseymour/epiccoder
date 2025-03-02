@@ -9,7 +9,7 @@ def is_binary_file(path)->bool:
     try:
         with open(path, "rb") as f:
             return b"\0" in f.read(1024)
-    except FileNotFoundError:
+    except (FileNotFoundError, OSError):
         return True
 
 # def is_binary_file(file_path: Union[str, Path], num_bytes: int = 1024) -> bool:

@@ -410,6 +410,16 @@ class MainWindow(QMainWindow):
         )
         return frame
 
+    def update_search(self):
+        self.search_worker.update(
+            pattern=self.search_input.text(),
+            path=self.model.rootDirectory().absolutePath(),
+            search_hidden=self.search_hidden_checkbox.isChecked,
+            ignore_case=self.search_ignore_case_checkbox.isChecked,
+            get_search_type=self.search_type_button.get_current_state_label,
+            get_search_files=self.get_search_files
+        )
+
     def set_up_body(self):
         # Body
         body_frame = QFrame()
@@ -491,11 +501,11 @@ class MainWindow(QMainWindow):
         search_layout.setContentsMargins(0, 10, 0, 0)
         search_layout.setSpacing(0)
 
-        search_input = QLineEdit()
-        search_input.setPlaceholderText("Search")
-        search_input.setFont(self.window_font)
-        search_input.setAlignment(Qt.AlignTop)
-        search_input.setStyleSheet(
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search")
+        self.search_input.setFont(self.window_font)
+        self.search_input.setAlignment(Qt.AlignTop)
+        self.search_input.setStyleSheet(
             """
             QLineEdit {
                 background-color: #21252b;
@@ -530,16 +540,7 @@ class MainWindow(QMainWindow):
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
 
-        self.search_button.clicked.connect(
-            lambda x: self.search_worker.update(
-                pattern=search_label.text(),
-                path=self.model.rootDirectory().absolutePath(),
-                search_hidden=self.search_hidden_checkbox.isChecked,
-                ignore_case=self.search_ignore_case_checkbox.isChecked,
-                get_search_type=self.search_type_button.get_current_state_label,
-                get_search_files=self.get_search_files
-            )
-        )
+        self.search_button.clicked.connect( self.update_search )
 
         self.search_list_view = QListWidget()
         self.search_list_view.setFont(self.window_font)
@@ -561,11 +562,10 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.search_type_button)
 
         si_layout = QHBoxLayout()
-        si_layout.addWidget(search_input)
+        si_layout.addWidget(self.search_input)
         si_layout.addWidget(self.search_button)
         search_layout.addLayout(si_layout)
 
-        # search_layout.addWidget(search_input)
         search_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
         search_layout.addWidget(self.search_list_view)
         self.search_frame.setLayout(search_layout)

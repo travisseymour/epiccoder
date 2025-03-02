@@ -75,24 +75,32 @@ class SearchWorker(QThread):
         self.ignore_case: Optional[Callable] = None
 
     def search(self):
+        ignore_case = self.ignore_case()
+        #use_regex = self.use_regex()
+        # TODO: Make this an option users can select
+        use_regex = False
+
         debug = False
-        self.items = []
+        self.items.clear()
         # you can add more     rm -rf build/ dist/ *.egg-info
         exclude_dirs = (".git", ".svn", ".hg", ".bzr", "__pycache__", "build", "dist")
         # exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
         # TODO: add ability to toggle regex
 
-        try:
-            if self.ignore_case():
-                reg = re.compile(self.search_text, re.IGNORECASE)
-            else:
-                reg = re.compile(self.search_text)
-        except re.error as e:
-            if debug:
-                print(f"Regex error: {e}")
-            self.finished.emit([])  # or handle the error as appropriate
-            return
+        if use_regex:
+            try:
+                if ignore_case:
+                    reg = re.compile(self.search_text, re.IGNORECASE)
+                else:
+                    reg = re.compile(self.search_text)
+            except re.error as e:
+                if debug:
+                    print(f"Regex error: {e}")
+                self.finished.emit([])  # or handle the error as appropriate
+                return
+        else:
+            reg = re.compile(r'.*')
 
         search_type = self.get_search_type().strip()
 
@@ -110,6 +118,7 @@ class SearchWorker(QThread):
             files_grouped_by_folder = group_files_by_folder(files)
             search_set = ((str(folder.resolve()), None, file_list) for folder, file_list in files_grouped_by_folder)
 
+
         for root, _, files in search_set:
             # total search limit
             if len(self.items) > 5_000:
@@ -122,16 +131,28 @@ class SearchWorker(QThread):
                 try:
                     with open(full_path, "r", encoding="utf8") as f:
                         try:
-                            for i, line in enumerate(f):
-                                if m := reg.search(line):
-                                    fd = SearchItem(
-                                        filename,
-                                        full_path,
-                                        i,
-                                        m.end(),
-                                        line[m.start() :].strip()[:50],  # limiting to 50 chars
-                                    )
-                                    self.items.append(fd)
+                            if use_regex:
+                                for i, line in enumerate(f):
+                                    if m := reg.search(line):
+                                        fd = SearchItem(
+                                            filename,
+                                            full_path,
+                                            i,
+                                            m.end(),
+                                            line[m.start():].strip()[:50],  # limiting to 50 chars
+                                        )
+                                        self.items.append(fd)
+                            else:
+                                for i, line in enumerate(f):
+                                    if (ignore_case and self.search_text.lower() in line.lower()) or self.search_text in line:
+                                        fd = SearchItem(
+                                            filename,
+                                            full_path,
+                                            i - 1,
+                                            len(line),
+                                            line.strip()[:50],  # limiting to 50 chars
+                                        )
+                                        self.items.append(fd)
                         except re.error as e:
                             if debug:
                                 print(e)
@@ -146,6 +167,7 @@ class SearchWorker(QThread):
         self.search()
 
     def update(self, pattern, path, search_hidden, ignore_case, get_search_type: Callable, get_search_files: Callable):
+        print(f'SearchWorker.update called with {pattern=}')
         self.search_text = pattern
         self.search_path = path
         self.search_hidden = search_hidden
