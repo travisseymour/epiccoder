@@ -342,7 +342,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)
-                if tok[-1] in ('\n', '\r') or tok[0] in ('\n', '\r'):
+                if tok[-1] in ("\n", "\r") or tok[0] in ("\n", "\r"):
                     string_flag = False
                 continue
 
@@ -366,7 +366,7 @@ class PPSCustomLexer(QsciLexerCustom):
             else:
                 peek = peek_tok()
 
-                if len(tok) > 2 and last_token and last_token[0] == "(" and peek and peek[0][0] in ('\n', '\r'):
+                if len(tok) > 2 and last_token and last_token[0] == "(" and peek and peek[0][0] in ("\n", "\r"):
                     self.setStyling(tok_len, self.RULE_NAME)
                 elif tok == "?" and last_token and last_token[0] in ("?", " ", "("):
                     self.setStyling(tok_len, self.VARIABLE)

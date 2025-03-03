@@ -7,6 +7,7 @@ from PyQt5.Qsci import QsciScintilla
 import chardet
 from charset_normalizer import from_bytes
 
+
 def normalize_line_endings(text: str, eol_mode: int) -> str:
     """Converts all line endings in the given text to match the specified EOL mode."""
 
@@ -21,7 +22,8 @@ def normalize_line_endings(text: str, eol_mode: int) -> str:
     # Default: Unix (`\n`)
     return text
 
-def read_file_with_detection(file_path: Union[str, Path])->str:
+
+def read_file_with_detection(file_path: Union[str, Path]) -> str:
     """
     Reads the file at 'file_path' using encoding detection with both chardet and charset_normalizer,
     and returns its content as a Unicode string (decoded text). This string can be used as UTF-8.
@@ -32,12 +34,12 @@ def read_file_with_detection(file_path: Union[str, Path])->str:
     Returns:
         str: The file's content decoded using the detected encoding.
     """
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         raw = f.read()
 
     # Detect encoding using chardet.
     result_chardet = chardet.detect(raw)
-    encoding_chardet = result_chardet.get('encoding')
+    encoding_chardet = result_chardet.get("encoding")
 
     # Detect encoding using charset_normalizer.
     result_normalizer = from_bytes(raw)
@@ -46,15 +48,16 @@ def read_file_with_detection(file_path: Union[str, Path])->str:
 
     # Decide which encoding to use.
     # Here we prefer chardet's result if available; otherwise, we use charset_normalizer's.
-    encoding = encoding_chardet or encoding_normalizer or 'utf-8'
+    encoding = encoding_chardet or encoding_normalizer or "utf-8"
 
     try:
         text = raw.decode(encoding)
     except Exception as e:
         # If decoding fails, fallback to UTF-8 with replacement of invalid characters.
-        text = raw.decode('utf-8', errors='replace')
+        text = raw.decode("utf-8", errors="replace")
 
     return text
+
 
 def read_file_convert_to_utf8(full_path):
     """
@@ -68,13 +71,13 @@ def read_file_convert_to_utf8(full_path):
 
     # First, try to detect the encoding with chardet.
     chardet_result = chardet.detect(raw_data)
-    encoding = chardet_result.get('encoding')
-    confidence = chardet_result.get('confidence', 0)
+    encoding = chardet_result.get("encoding")
+    confidence = chardet_result.get("confidence", 0)
 
     # If chardet doesn't return an encoding or has low confidence, use charset_normalizer.
     if not encoding or confidence < 0.5:
         cn_result = charset_normalizer.detect(raw_data)
-        encoding = cn_result.get('encoding', 'utf-8')
+        encoding = cn_result.get("encoding", "utf-8")
 
     try:
         text = raw_data.decode(encoding)
@@ -86,6 +89,5 @@ def read_file_convert_to_utf8(full_path):
             text = best_guess.to_string()
         else:
             # Fallback: decode as UTF-8 with error replacement.
-            text = raw_data.decode('utf-8', errors='replace')
+            text = raw_data.decode("utf-8", errors="replace")
     return text
-

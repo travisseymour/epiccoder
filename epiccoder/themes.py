@@ -20,6 +20,7 @@ def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "mono
     font.setPointSize(size)
     return font
 
+
 theme = {
     "Monokai": {
         "light": {"foreground": "#49483E", "background": "#F8F8F2"},

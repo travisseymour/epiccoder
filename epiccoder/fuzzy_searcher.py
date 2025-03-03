@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from typing import Optional, Callable, List
 
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -25,9 +26,7 @@ from PyQt5.QtWidgets import QListWidgetItem, QApplication
 import os
 import re
 
-from epiccoder import eol_mode
 from epiccoder.fileutils import is_binary_file, group_files_by_folder, walkdir, is_hidden
-from epiccoder.textutils import read_file_convert_to_utf8, normalize_line_endings
 
 
 class SearchItem(QListWidgetItem):
@@ -62,8 +61,6 @@ class SearchItem(QListWidgetItem):
         return self.formatted
 
 
-
-
 class SearchWorker(QThread):
     finished = pyqtSignal(list)
 
@@ -77,17 +74,14 @@ class SearchWorker(QThread):
         self.ignore_case: Optional[Callable] = None
 
     def search_in_file(
-            self,
-            full_path: str,
-            filename: str,
-            use_regex: bool,
-            ignore_case: bool,
-            debug: bool = False
+        self, full_path: str, filename: str, use_regex: bool, ignore_case: bool, debug: bool = False
     ) -> List[SearchItem]:
         """
-        Searches a single file for matches by loading its full text into memory,
-        converting its encoding to UTF-8 using read_file_convert_to_utf8,
-        normalizing line endings, splitting into lines, and processing each line.
+        Searches a single file for matches by reading it line by line.
+
+        This version opens the file in text mode with universal newline support
+        (which converts all newline variations to "\n") and uses error replacement
+        to avoid decode errors. This ensures that the line numbers (i) are correct.
 
         If `use_regex` is True, self.search_text is treated as a regex pattern,
         compiled with the appropriate case sensitivity. Otherwise, a standard
@@ -98,7 +92,6 @@ class SearchWorker(QThread):
           - filename: The file's name.
           - use_regex: Boolean flag; True means treat self.search_text as a regex pattern,
                        False means treat it as plain text.
-          - eol_mode: The target EOL mode to normalize to (e.g., QsciScintilla.EolUnix).
           - ignore_case: Boolean flag to ignore case in the search.
           - debug: If True, prints debugging information.
 
@@ -107,57 +100,33 @@ class SearchWorker(QThread):
         """
         items: List[SearchItem] = []
         try:
-            # Read the file and convert its content to UTF-8.
-            text: str = read_file_convert_to_utf8(full_path)
-            # Normalize the line endings.
-            norm_text: str = normalize_line_endings(text, eol_mode)
-
-            if use_regex:
-                flags = re.IGNORECASE if ignore_case else 0
-                # Compile the regex pattern using a raw f-string so that user-entered backslashes are treated literally.
-                target_regex = re.compile(rf"{self.search_text}", flags)
-                # Quick check: if no match is found in the entire text, return early.
-                if not target_regex.search(norm_text):
-                    return []
-            else:
-                target_text: str = self.search_text
-                # Quick check for substring search.
-                if ignore_case:
-                    if target_text.lower() not in norm_text.lower():
-                        return []
-                else:
-                    if target_text not in norm_text:
-                        return []
-
-            # Proceed to split the text into lines if a match exists.
-            lines: List[str] = norm_text.splitlines()
-
-            for i, line in enumerate(lines):
+            # Open the file in text mode with universal newline support.
+            with open(full_path, "r", encoding="utf8", errors="replace", newline=None) as f:
                 if use_regex:
-                    if m := target_regex.search(line):
-                        fd = SearchItem(
-                            filename,
-                            full_path,
-                            i,
-                            m.end(),
-                            line[m.start():].strip()[:50]  # limiting snippet to 50 characters
-                        )
-                        items.append(fd)
+                    flags = re.IGNORECASE if ignore_case else 0
+                    # Use a raw f-string to ensure user-entered backslashes are treated literally.
+                    target_regex = re.compile(rf"{self.search_text}", flags)
                 else:
-                    pos: int
-                    if ignore_case:
-                        pos = line.lower().find(target_text.lower())
+                    target_text: str = self.search_text
+
+                for i, line in enumerate(f):
+                    # Strip the trailing newline (if any).
+                    line = line.rstrip("\n")
+                    if use_regex:
+                        if m := target_regex.search(line):
+                            fd = SearchItem(
+                                filename,
+                                full_path,
+                                i,
+                                m.end(),
+                                line[m.start() :].strip()[:50],  # limiting snippet to 50 characters
+                            )
+                            items.append(fd)
                     else:
-                        pos = line.find(target_text)
-                    if pos != -1:
-                        fd = SearchItem(
-                            filename,
-                            full_path,
-                            i,
-                            pos + len(target_text),
-                            line[pos:].strip()[:50]
-                        )
-                        items.append(fd)
+                        pos: int = line.lower().find(target_text.lower()) if ignore_case else line.find(target_text)
+                        if pos != -1:
+                            fd = SearchItem(filename, full_path, i, pos + len(target_text), line[pos:].strip()[:50])
+                            items.append(fd)
         except Exception as e:
             if debug:
                 print(f"Error processing file {full_path}: {e}")
@@ -165,26 +134,19 @@ class SearchWorker(QThread):
 
     def search(self):
         ignore_case = self.ignore_case()
-        #use_regex = self.use_regex()
+        # use_regex = self.use_regex()
         use_regex = False  # TODO: Add a checkbox for this and pass a func to update() to check it
         search_type = self.get_search_type().strip()
         ignore_hidden = self.ignore_hidden()
 
         debug = False
-        items:List[SearchItem] = []
+        items: List[SearchItem] = []
 
         exclude_dirs = (".git", ".svn", ".hg", ".bzr", "__pycache__", "build", "dist")
         # exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
         if search_type == "Search All Files in Folder":
-            import timeit
-            start = timeit.default_timer()
-            search_set = walkdir(
-                path=self.search_path,
-                include_hidden=self.ignore_case(),
-                exclude_dirs=exclude_dirs
-            )
-            print(f'{timeit.default_timer()-start=}')
+            search_set = walkdir(path=self.search_path, include_hidden=self.ignore_case(), exclude_dirs=exclude_dirs)
         else:
             files = self.get_search_files()
             files_grouped_by_folder = group_files_by_folder(files)
@@ -196,26 +158,27 @@ class SearchWorker(QThread):
                 break
             for filename in files:
                 full_path = str(os.path.join(root, filename))
+                if debug:
+                    print(f"Checking {full_path}")
                 if ignore_hidden and is_hidden(full_path):
-                    print('\t (skipped hidden file/folder')
+                    if debug:
+                        print("\t (skipped hidden file/folder")
                     continue
-                print(f'Checking {full_path}')
+
                 if is_binary_file(full_path):
-                    print('\t (skipped binary file)')
+                    if debug:
+                        print("\t (skipped binary file)")
                     continue
 
                 try:
                     items.extend(
                         self.search_in_file(
-                            full_path = full_path,
-                            filename = filename,
-                            use_regex = use_regex,
-                            ignore_case = ignore_case
+                            full_path=full_path, filename=filename, use_regex=use_regex, ignore_case=ignore_case
                         )
                     )
                 except (UnicodeDecodeError, OSError) as e:
                     if debug:
-                        print(f'Error processing {full_path}: {e}')
+                        print(f"Error processing {full_path}: {e}")
                     continue
 
         self.finished.emit(items)
@@ -224,7 +187,6 @@ class SearchWorker(QThread):
         self.search()
 
     def update(self, pattern, path, ignore_hidden, ignore_case, get_search_type: Callable, get_search_files: Callable):
-        print(f'SearchWorker.update called with {pattern=}')
         self.search_text = pattern
         self.search_path = path
         self.ignore_hidden = ignore_hidden

@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QStyle
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtGui import QIcon
 
 from epiccoder.resource import get_resource
 from epiccoder.themes import get_default_font
@@ -18,16 +18,16 @@ class ThreeStateButton(QWidget):
         # Use built-in Qt icons
         style = self.style()
         self.icons = [
-            QIcon(get_resource('images', 'search', 'search_folder_glass.png')),  # Search Folder
-            QIcon(get_resource('images', 'search', 'search_files_glass.png')),  # Search All Open Files
-            QIcon(get_resource('images', 'search', 'search_file_glass.png'))  # Search Current File Only
+            QIcon(get_resource("images", "search", "search_folder_glass.png")),  # Search Folder
+            QIcon(get_resource("images", "search", "search_files_glass.png")),  # Search All Open Files
+            QIcon(get_resource("images", "search", "search_file_glass.png")),  # Search Current File Only
         ]
 
         self.labels = [" Search All Files in Folder", " Search All Open Files", " Search Current File Only"]
 
         # Create the button with the correct initial label
         self.button = QPushButton(self.labels[self.state])  # ✅ Fix: Start with correct label
-        self.button.setIconSize(QSize(40,40))
+        self.button.setIconSize(QSize(40, 40))
         self.button.setStyleSheet("font-size: 12pt;")
         self.button.setCheckable(True)  # Allows toggling
         self.button.setIcon(self.icons[self.state])  # Set initial icon
@@ -49,8 +49,7 @@ class ThreeStateButton(QWidget):
         return self.labels[self.state].strip()
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # Run the app
     app = QApplication([])
 

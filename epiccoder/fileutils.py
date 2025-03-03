@@ -1,10 +1,12 @@
 import mimetypes
 import os
 from pathlib import Path
-from typing import Union, Sequence, Iterator
+from typing import Sequence, Iterator, Union
+from collections import defaultdict
+from typing import List, Tuple
 
 
-def is_binary_file(path)->bool:
+def is_binary_file(path) -> bool:
     """Check if file is binary"""
     try:
         with open(path, "rb") as f:
@@ -12,43 +14,39 @@ def is_binary_file(path)->bool:
     except (FileNotFoundError, OSError):
         return True
 
-# def is_binary_file(file_path: Union[str, Path], num_bytes: int = 1024) -> bool:
-#     """
-#     Detects if a file is binary or text.
-#     Uses a combination of MIME type detection and a heuristic check.
-#
-#     - Reads the first `num_bytes` of the file.
-#     - If there are null bytes (`b'\x00'`), it's likely binary.
-#     - Falls back to `mimetypes` for additional checking.
-#     """
-#
-#     filepath = str(file_path)
-#
-#     # Try MIME type detection first
-#     mime_type, encoding = mimetypes.guess_type(filepath)
-#
-#     # If the MIME type starts with "text/", it's likely a text file
-#     if mime_type and mime_type.startswith("text/"):
-#         return False  # Not binary
-#
-#     # Read a small part of the file and check for binary indicators
-#     try:
-#         with open(filepath, "rb") as f:
-#             chunk = f.read(num_bytes)
-#             if b"\x00" in chunk:  # Null byte is a strong binary indicator
-#                 return True
-#             elif not chunk:  # Empty file? Assume text
-#                 return False
-#     except Exception as e:
-#         print(f"Error reading file {filepath}: {e}")
-#         return False  # Assume text if we can't read the file
-#
-#     return False  # Default to text
 
+def is_binary_file_alternative(file_path: Union[str, Path], num_bytes: int = 1024) -> bool:
+    """
+    Detects if a file is binary or text.
+    Uses a combination of MIME type detection and a heuristic check.
 
-from pathlib import Path
-from collections import defaultdict
-from typing import List, Tuple
+    - Reads the first `num_bytes` of the file.
+    - If there are null bytes (`b'\x00'`), it's likely binary.
+    - Falls back to `mimetypes` for additional checking.
+    """
+
+    filepath = str(file_path)
+
+    # Try MIME type detection first
+    mime_type, encoding = mimetypes.guess_type(filepath)
+
+    # If the MIME type starts with "text/", it's likely a text file
+    if mime_type and mime_type.startswith("text/"):
+        return False  # Not binary
+
+    # Read a small part of the file and check for binary indicators
+    try:
+        with open(filepath, "rb") as f:
+            chunk = f.read(num_bytes)
+            if b"\x00" in chunk:  # Null byte is a strong binary indicator
+                return True
+            elif not chunk:  # Empty file? Assume text
+                return False
+    except Exception as e:
+        print(f"Error reading file {filepath}: {e}")
+        return False  # Assume text if we can't read the file
+
+    return False  # Default to text
 
 
 def group_files_by_folder(paths: List[Path]) -> List[Tuple[Path, Tuple[str, ...]]]:
@@ -85,7 +83,9 @@ def group_files_by_folder(paths: List[Path]) -> List[Tuple[Path, Tuple[str, ...]
     return [(folder, tuple(files)) for folder, files in folder_map.items()]
 
 
-def walkdir(path: str, include_hidden: bool = False, exclude_dirs: Sequence = (), exclude_files: Sequence = ()) -> Iterator[Tuple[str, list, list]]:
+def walkdir(
+    path: str, include_hidden: bool = False, exclude_dirs: Sequence = (), exclude_files: Sequence = ()
+) -> Iterator[Tuple[str, list, list]]:
     """
     Recursively walks through a directory, yielding root paths, directories, and files while allowing
     optional filtering of hidden files and directories.
@@ -130,4 +130,4 @@ def is_hidden(path_str: str) -> bool:
     starts with a dot ('.'), indicating a hidden file or folder.
     """
     path = Path(path_str)
-    return any(part.startswith('.') for part in path.parts)
+    return any(part.startswith(".") for part in path.parts)

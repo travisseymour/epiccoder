@@ -49,7 +49,8 @@ from PyQt5.QtWidgets import (
     QApplication,
     QTabBar,
     QProxyStyle,
-    QStyle, QPushButton,
+    QStyle,
+    QPushButton,
 )
 
 from epiccoder import config
@@ -411,13 +412,16 @@ class MainWindow(QMainWindow):
         return frame
 
     def update_search(self):
+        self.search_button.setEnabled(False)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
         self.search_worker.update(
             pattern=self.search_input.text(),
             path=self.model.rootDirectory().absolutePath(),
             ignore_hidden=self.ignore_hidden_checkbox.isChecked,
             ignore_case=self.search_ignore_case_checkbox.isChecked,
             get_search_type=self.search_type_button.get_current_state_label,
-            get_search_files=self.get_search_files
+            get_search_files=self.get_search_files,
         )
 
     def set_up_body(self):
@@ -446,11 +450,11 @@ class MainWindow(QMainWindow):
         side_bar_layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
         folder_label = self.get_side_bar_label(get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon")
-        folder_label.setToolTip('View Folder Contents')
+        folder_label.setToolTip("View Folder Contents")
         side_bar_layout.addWidget(folder_label)
 
         search_label = self.get_side_bar_label(get_resource("uiicons", "search-icon.svg"), "search-icon")
-        search_label.setToolTip('Search For Text')
+        search_label.setToolTip("Search For Text")
         side_bar_layout.addWidget(search_label)
 
         self.side_bar.setLayout(side_bar_layout)
@@ -520,6 +524,9 @@ class MainWindow(QMainWindow):
             """
         )
 
+        check_blank = str(Path(get_resource("images", "check_blank.png")).resolve().as_uri())
+        check_mark = str(Path(get_resource("images", "check_x.png")).resolve().as_uri())
+
         self.ignore_hidden_checkbox = QCheckBox("Include Hidden")
         self.ignore_hidden_checkbox.setToolTip("If checked, will include files and folders starting with a '.'")
         self.ignore_hidden_checkbox.setFont(self.window_font)
@@ -535,13 +542,13 @@ class MainWindow(QMainWindow):
         self.search_type_button = ThreeStateButton()
 
         self.search_button = QPushButton()
-        self.search_button.setIcon(QIcon(get_resource('images', 'search', 'search_glass.png')))
+        self.search_button.setIcon(QIcon(get_resource("images", "search", "search_glass.png")))
         self.search_button.setFixedSize(30, 30)
 
         self.search_worker = SearchWorker()
         self.search_worker.finished.connect(self.search_finished)
 
-        self.search_button.clicked.connect( self.update_search )
+        self.search_button.clicked.connect(self.update_search)
 
         self.search_list_view = QListWidget()
         self.search_list_view.setFont(self.window_font)
@@ -617,13 +624,13 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(body_frame)
 
     def search_finished(self, items):
-        self.search_button.setEnabled(False)
         try:
             self.search_list_view.clear()
             for i in items:
                 self.search_list_view.addItem(i)
         finally:
             self.search_button.setEnabled(True)
+            QApplication.restoreOverrideCursor()
 
     def search_list_view_clicked(self, item: SearchItem):
         self.set_new_tab(Path(item.full_path))
@@ -707,7 +714,7 @@ class MainWindow(QMainWindow):
         dupe_path.write_text(normalize_line_endings(p.read_text(), editor.eolMode()))
         self.set_new_tab(path=dupe_path, is_new_file=False, file_type=p.suffix)
 
-    def get_all_open_files(self) -> tuple[Path,...]:
+    def get_all_open_files(self) -> tuple[Path, ...]:
         """Returns a list of Paths for all open files."""
         open_files = []
         for i in range(self.tab_view.count()):
@@ -723,7 +730,7 @@ class MainWindow(QMainWindow):
             return (editor.file_path,)
         return tuple()
 
-    def get_search_files(self)->tuple[Path, ...]:
+    def get_search_files(self) -> tuple[Path, ...]:
         search_type = self.search_type_button.get_current_state_label().strip()
 
         if search_type == "Search Current File Only":
