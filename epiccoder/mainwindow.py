@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
         style_sheet = Path(get_resource("css/style.qss")).read_text()
         style_sheet = style_sheet.replace(
             ":/icons/close-icon.svg",
-            str(Path(get_resource("uiicons", "close-icon.svg")).resolve()),
+            str(Path(get_resource("uiicons", "close-icon.svg")).resolve().as_uri()),
         )
         self.setStyleSheet(style_sheet)
 
