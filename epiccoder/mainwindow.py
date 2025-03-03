@@ -524,8 +524,8 @@ class MainWindow(QMainWindow):
             """
         )
 
-        check_blank = str(Path(get_resource("images", "check_blank.png")).resolve().as_uri())
-        check_mark = str(Path(get_resource("images", "check_x.png")).resolve().as_uri())
+        # check_blank = str(Path(get_resource("images", "check_blank.png")).resolve().as_uri())
+        # check_mark = str(Path(get_resource("images", "check_x.png")).resolve().as_uri())
 
         self.ignore_hidden_checkbox = QCheckBox("Include Hidden")
         self.ignore_hidden_checkbox.setToolTip("If checked, will include files and folders starting with a '.'")
