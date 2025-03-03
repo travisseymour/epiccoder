@@ -53,7 +53,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
 )
 
-from epiccoder import config
+from epiccoder import config, eol_mode
 from epiccoder.aboutwindow import AboutWin
 from epiccoder.customeditor import CustomEditor
 from epiccoder.darkmode import is_dark_mode
@@ -768,7 +768,7 @@ class MainWindow(QMainWindow):
             self.save_as()
             return
         try:
-            editor.file_path.write_text(normalize_line_endings(editor.text(), editor.eolMode()))
+            editor.file_path.write_text(normalize_line_endings(editor.text(), eol_mode))
         except Exception as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
@@ -798,7 +798,7 @@ class MainWindow(QMainWindow):
             return
         new_path = Path(file_path)
         try:
-            new_path.write_text(normalize_line_endings(editor.text(), editor.eolMode()))
+            new_path.write_text(normalize_line_endings(editor.text(), eol_mode))
         except IOError as e:
             self.statusBar().showMessage(f"Write Error: {e}", 4000)
             return
