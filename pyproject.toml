@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EPICcoder"
-version = "2025.2.13.4"
+version = "2025.3.2.1"
 description = "EPIC Coder: Minimal programmer's text editor for EPIC Production Rule Files and more."
 authors = [{ name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }]
 license = { text = "GPLv3" }
