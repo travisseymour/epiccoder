@@ -310,11 +310,11 @@ class PPSCustomLexer(QsciLexerCustom):
             else:
                 return None
 
-        def peek_tok(n=0):
+        def peek_tok(n=0) -> tuple:
             try:
-                return token_list[n]
+                return tuple(token_list[n])
             except IndexError:
-                return [""]
+                return "", 0  # Returns a tuple with an empty string and zero length
 
         def skip_space_peek(skip=None):
             i = 0
