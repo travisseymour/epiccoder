@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
         style_sheet = Path(get_resource("css/style.qss")).read_text()
         style_sheet = style_sheet.replace(
             ":/icons/close-icon.svg",
-            str(get_resource("uiicons", "close-icon.svg")),
+            str(Path(get_resource("uiicons", "close-icon.svg")).resolve().as_uri()),
         )
         self.setStyleSheet(style_sheet)
 
@@ -443,7 +443,7 @@ class MainWindow(QMainWindow):
         self.side_bar = QFrame()
         self.side_bar.setFrameShape(QFrame.StyledPanel)
         self.side_bar.setFrameShadow(QFrame.Plain)
-        self.side_bar.setStyleSheet(f"background-color: {self.side_bar_clr};")
+        # self.side_bar.setStyleSheet(f"background-color: {self.side_bar_clr.name()};")
         side_bar_layout = QVBoxLayout()
         side_bar_layout.setContentsMargins(5, 10, 5, 0)
         side_bar_layout.setSpacing(0)
