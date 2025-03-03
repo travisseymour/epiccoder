@@ -17,11 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-
+from PyQt5.Qsci import QsciScintilla
 from PyQt5.QtCore import QCoreApplication, QSize
 from PyQt5.QtWidgets import QApplication
 
+from epiccoder import set_global_eol_mode
 from epiccoder.mainwindow import MainWindow
 
 import sys
@@ -55,6 +55,11 @@ def main():
     # Set the font for the application
     default_font = get_default_font(family="monospace", size=14)
     app.setFont(default_font)
+
+    if sys.platform.startswith("win"):
+        set_global_eol_mode(QsciScintilla.EolWindows)  # \r\n (Windows)
+    else:
+        set_global_eol_mode(QsciScintilla.EolUnix)  # \n (Default for Linux & other OS)
 
     # init QSettings once so we can use default constructor throughout project
     QCoreApplication.setOrganizationName("TravisSeymour")

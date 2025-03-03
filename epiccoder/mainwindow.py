@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
         self.model: Optional[QFileSystemModel] = None
         self.tree_view: Optional[QTreeView] = None
         self.search_frame: Optional[QFrame] = None
-        self.search_hidden_checkbox: Optional[QCheckBox] = None
+        self.ignore_hidden_checkbox: Optional[QCheckBox] = None
         self.search_ignore_case_checkbox: Optional[QCheckBox] = None
         self.search_type_button: Optional[ThreeStateButton] = None
         self.search_button: Optional[QPushButton] = None
@@ -414,7 +414,7 @@ class MainWindow(QMainWindow):
         self.search_worker.update(
             pattern=self.search_input.text(),
             path=self.model.rootDirectory().absolutePath(),
-            search_hidden=self.search_hidden_checkbox.isChecked,
+            ignore_hidden=self.ignore_hidden_checkbox.isChecked,
             ignore_case=self.search_ignore_case_checkbox.isChecked,
             get_search_type=self.search_type_button.get_current_state_label,
             get_search_files=self.get_search_files
@@ -520,10 +520,11 @@ class MainWindow(QMainWindow):
             """
         )
 
-        self.search_hidden_checkbox = QCheckBox("Include Hidden")
-        self.search_hidden_checkbox.setToolTip("If checked, will include files and folders starting with a '.'")
-        self.search_hidden_checkbox.setFont(self.window_font)
-        self.search_hidden_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+        self.ignore_hidden_checkbox = QCheckBox("Include Hidden")
+        self.ignore_hidden_checkbox.setToolTip("If checked, will include files and folders starting with a '.'")
+        self.ignore_hidden_checkbox.setFont(self.window_font)
+        self.ignore_hidden_checkbox.setStyleSheet("color: white; margin-bottom: 10px;")
+        self.ignore_hidden_checkbox.setChecked(True)
 
         self.search_ignore_case_checkbox = QCheckBox("Ignore Case")
         self.search_ignore_case_checkbox.setToolTip("If checked, will ignore case when searching text")
@@ -557,7 +558,7 @@ class MainWindow(QMainWindow):
         )
         self.search_list_view.itemClicked.connect(self.search_list_view_clicked)
 
-        search_layout.addWidget(self.search_hidden_checkbox)
+        search_layout.addWidget(self.ignore_hidden_checkbox)
         search_layout.addWidget(self.search_ignore_case_checkbox)
         search_layout.addWidget(self.search_type_button)
 

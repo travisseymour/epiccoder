@@ -122,3 +122,12 @@ def walkdir(path: str, include_hidden: bool = False, exclude_dirs: Sequence = ()
             dirs[:] = [d for d in dirs if d not in exclude_dirs and not d.startswith(".")]
             files[:] = [f for f in files if Path(f).suffix not in exclude_files and not f.startswith(".")]
         yield root, dirs, files
+
+
+def is_hidden(path_str: str) -> bool:
+    """
+    Returns True if any component of the path (a directory or file)
+    starts with a dot ('.'), indicating a hidden file or folder.
+    """
+    path = Path(path_str)
+    return any(part.startswith('.') for part in path.parts)
