@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt5.QtWidgets import QDialog
 from pathlib import Path
 
+from epiccoder.darkmode import is_dark_mode
 from epiccoder.duplicateui import Ui_DuplicateFileDialog
 
 
@@ -38,7 +39,8 @@ class DuplicateFileNameWin(QDialog):
         self.ui.labelError.setMaximumHeight(self.ui.lineEditStem.height())
 
         self.ui.lineEditStem.setText(self.dupe_path.stem)
-        self.ui.lineEditStem.setStyleSheet("color: darkblue;")
+        if is_dark_mode():
+            self.ui.lineEditStem.setStyleSheet("color: lime;")
 
         self.ui.labelExt.setText(self.dupe_path.suffix)
         self.ui.labelPath.setText(str(self.dupe_path))
