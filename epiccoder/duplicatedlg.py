@@ -38,6 +38,8 @@ class DuplicateFileNameWin(QDialog):
         self.ui.labelError.setMaximumHeight(self.ui.lineEditStem.height())
 
         self.ui.lineEditStem.setText(self.dupe_path.stem)
+        self.ui.lineEditStem.setStyleSheet("color: darkblue;")
+
         self.ui.labelExt.setText(self.dupe_path.suffix)
         self.ui.labelPath.setText(str(self.dupe_path))
 
