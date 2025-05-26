@@ -17,6 +17,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import os
+import sys
+import platform
+
+# Function to determine the available display server
+def set_qt_platform():
+    # Check if the operating system is Linux
+    if platform.system() == 'Linux':
+        if 'WAYLAND_DISPLAY' in os.environ:
+            os.environ['QT_QPA_PLATFORM'] = 'wayland'
+            print("Using Wayland as the display server.")
+        else:
+            os.environ['QT_QPA_PLATFORM'] = 'xcb'
+            print("Using X11 (xcb) as the display server.")
+    elif platform.system() == 'Windows':
+        # Windows typically does not require setting this
+        pass
+    elif platform.system() == 'Darwin':  # macOS
+        # macOS typically does not require setting this
+        pass
+    else:
+        # Optionally handle other operating systems or set a default
+        os.environ['QT_QPA_PLATFORM'] = 'xcb'  # Default to X11 for non-Linux
+
+# Set the appropriate platform before importing QApplication
+set_qt_platform()
 
 from PyQt5.Qsci import QsciScintilla
 from PyQt5.QtCore import QCoreApplication, QSize
@@ -25,7 +51,6 @@ from PyQt5.QtWidgets import QApplication
 from epiccoder import set_global_eol_mode
 from epiccoder.mainwindow import MainWindow
 
-import sys
 from pathlib import Path
 
 from epiccoder.splashscreen import SplashScreen
